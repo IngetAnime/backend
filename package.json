@@ -1,0 +1,40 @@
+{
+  "name": "ingetanime",
+  "version": "1.0.0",
+  "description": "��I\u0000n\u0000g\u0000e\u0000t\u0000A\u0000n\u0000i\u0000m\u0000e\u0000 \u0000-\u0000 \u0000B\u0000a\u0000c\u0000k\u0000e\u0000n\u0000d\u0000\r\u0000 \u0000\r\u0000 \u0000E\u0000x\u0000p\u0000r\u0000e\u0000s\u0000s\u0000J\u0000S\u0000,\u0000 \u0000P\u0000r\u0000i\u0000s\u0000m\u0000a\u0000,\u0000 \u0000P\u0000o\u0000s\u0000t\u0000g\u0000r\u0000e\u0000S\u0000Q\u0000L\u0000",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon app.js",
+    "migrate": "prisma migrate dev --schema=src/api/v1/models/prisma/schema.prisma",
+    "reset": "prisma migrate reset --schema=src/api/v1/models/prisma/schema.prisma",
+    "generate": "prisma generate --schema=src/api/v1/models/prisma/schema.prisma"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IngetAnime/backend.git"
+  },
+  "author": "asdcode",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IngetAnime/backend/issues"
+  },
+  "homepage": "https://github.com/IngetAnime/backend#readme",
+  "dependencies": {
+    "@prisma/client": "^6.5.0",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.10.0",
+    "nodemon": "^3.1.9",
+    "prisma": "^6.5.0",
+    "zod": "^3.24.2"
+  }
+}

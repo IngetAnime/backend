@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  user
+}
+
+enum ListStatus {
+  watching
+  completed
+  plan_to_watch
+  on_hold
+  dropped
+}
+
+enum AnimeStatus {
+  currently_airing
+  finished_airing
+  not_yet_aired
+}
+
+enum AccessType {
+  limited_time
+  subscription
+  free
+}
+
+model User {
+  id Int @id @default(autoincrement())
+
+  username  String   @unique
+  picture   String?
+  role      Role     @default(user)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  email         String   @unique
+  password      String
+  otpCode       String   @map("otp_code")
+  otpExpiration DateTime @map("otp_expiration")
+  isVerifed     Boolean  @default(false) @map("is_verified")
+
+  googleId          String? @unique @map("google_id")
+  malId             String? @unique @map("mal_id")
+  mal_refresh_token String? @map("mal_refresh_token")
+
+  animeList AnimeList[]
+
+  @@map("users")
+}
+
+model AnimeList {
+  id         Int  @id @default(autoincrement())
+  userId     Int  @map("user_id")
+  animeId    Int  @map("anime_id")
+  platformId Int? @map("platform_id") // User selected platform
+
+  episodesDifference Int?       @map("episodes_difference") // Example: Bstation free user
+  progress           Int?
+  score              Int?
+  startDate          DateTime?  @map("start_date")
+  finishDate         DateTime?  @map("finish_date")
+  status             ListStatus @default(plan_to_watch)
+  isSyncedWithMal    Boolean    @default(false)
+  updatedAt          DateTime   @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anime    Anime     @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  platform Platform? @relation(fields: [platformId], references: [id])
+
+  @@map("anime_list")
+}
+
+model Anime {
+  id         Int  @id @default(autoincrement())
+  platformId Int? @map("platform_id") // Main anime platforms
+
+  malId      Int  @unique @map("mal_id")
+  updateAt     DateTime    @updatedAt @map("updated_at")
+  title        String
+  picture      String
+  episodeTotal Int         @default(0) @map("episode_total")
+  isHitatus    Boolean     @default(false) @map("is_hiatus")
+  status       AnimeStatus @default(not_yet_aired)
+
+  platforms    Platform[]  @relation("AlternativePlatforms")
+  mainPlatform Platform?   @relation("MainPlatform", fields: [platformId], references: [id])
+  animeList    AnimeList[]
+  animeSchedules AnimeSchedule[]
+
+  @@map("anime")
+}
+
+model Platform {
+  id      Int @id @default(autoincrement())
+  animeId Int @map("anime_id")
+
+  name         String
+  link         String
+  accessType   AccessType @map("access_type")
+  icon         String?
+  releaseAt    DateTime?  @map("release_at")
+  episodeAired Int        @default(0) @map("episode_aired")
+
+  anime        Anime       @relation("AlternativePlatforms", fields: [animeId], references: [id], onDelete: Cascade)
+  mainPlatform Anime[]     @relation("MainPlatform")
+  animeList    AnimeList[]
+  platformSchedules PlatformSchedule[]
+
+  @@map("platforms")
+}
+
+model AnimeSchedule {
+  id      Int @id @default(autoincrement())
+  animeId Int @map("anime_id")
+
+  updateOn  DateTime    @map("update_on")
+  isUpdated Boolean     @default(false) @map("is_updated")
+  status    AnimeStatus
+
+  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@map("anime_schedules")
+}
+
+model PlatformSchedule {
+  id         Int @id @default(autoincrement())
+  platformId Int @map("platform_id")
+
+  updateOn      DateTime @map("update_on")
+  isUpdated     Boolean  @default(false) @map("is_updated")
+  episodeNumber Int
+
+  platform Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@map("platform_schedules")
+}
