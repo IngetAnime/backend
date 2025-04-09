@@ -211,9 +211,10 @@ export const loginWithGoogle = async (code) => {
     const { id, email, picture } = await getGoogleInfo();
 
     let user = await prisma.user.findUnique({ where: { email } });
+    let statusCode = 200;
     if (user) { 
       if (user.googleId === id) { // If email found and already connect to google
-        return { ...(getUserData(user)) };
+        return { ...(getUserData(user)), statusCode };
       }
 
       // If email found, but not connect to google  
@@ -225,7 +226,7 @@ export const loginWithGoogle = async (code) => {
         }
       })
       
-      return { ...(getUserData(user)) };
+      return { ...(getUserData(user)), statusCode };
     } 
     
     // Generate username
@@ -245,12 +246,12 @@ export const loginWithGoogle = async (code) => {
     const otpExpiration = dayjs().add(10, "minute").toISOString();
     user = await prisma.user.create({
       data: { 
-        username, email, password: hashedPassword, otpCode, otpExpiration, 
+        username, email, password: hashedPassword, otpCode, otpExpiration, isVerifed: true,
         googleId: id, ...(picture && { picture })
       }
     });
 
-    return { ...(getUserData(user)) };
+    return { ...(getUserData(user)), statusCode: 201 };
   } catch(err) {
     console.log("Error in the loginWithGoogle service");
     if (err.code === "P2025") {
@@ -278,7 +279,7 @@ export const loginWithMAL = async (code) => {
           }
         })
       }
-      return { ...(getUserData(user)) };
+      return { ...(getUserData(user)), statusCode: 200 };
     } 
     
     // Generate username
@@ -298,12 +299,12 @@ export const loginWithMAL = async (code) => {
     const otpExpiration = dayjs().add(10, "minute").toISOString();
     user = await prisma.user.create({
       data: { 
-        username, email: username, password: hashedPassword, otpCode, otpExpiration, 
-        malId: id, ...(picture && { picture })
+        username, email: username, password: hashedPassword, otpCode, otpExpiration, isVerifed: true,
+        malId: id,...(picture && { picture })
       }
     });
 
-    return { ...(getUserData(user)) };
+    return { ...(getUserData(user)), statusCode: 201 };
   } catch(err) {
     console.log("Error in the loginWithMAL service", err);
     if (err.code === "P2025") {

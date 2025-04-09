@@ -103,9 +103,9 @@ export const resetPassword = async (req, res, next) => {
 export const loginWithGoogle = async (req, res, next) => {
   try {
     const { code } = req.body;
-    const {token, ...data } = await services.loginWithGoogle(code);
+    const {token, statusCode, ...data } = await services.loginWithGoogle(code);
     setAuthCookie(res, token)
-    res.status(200).json({ ...data });
+    res.status(statusCode).json({ ...data });
   } catch(err) {
     console.log("Error in the loginWithGoogle controller");
     next(err);
@@ -115,9 +115,9 @@ export const loginWithGoogle = async (req, res, next) => {
 export const loginWithMAL = async (req, res, next) => {
   try {
     const { code } = req.body;
-    const { token, ...data } = await services.loginWithMAL(code);
+    const { token, statusCode, ...data } = await services.loginWithMAL(code);
     setAuthCookie(res, token)
-    res.status(200).json({ ...data });
+    res.status(statusCode).json({ ...data });
   } catch(err) {
     console.log("Error in the loginWithMAL controller");
     next(err);

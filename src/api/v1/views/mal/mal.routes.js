@@ -20,15 +20,15 @@ router.get('/callback', async (req, res) => {
       throw new Error('Error: ' + error);
     }
     console.log(code);
-    const response = await fetch(process.env.BASE_URL + '/api/v1/auth/mal', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ code })
-    })
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to authenticate');
+    // const response = await fetch(process.env.BASE_URL + '/api/v1/auth/mal', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   },
+    //   body: JSON.stringify({ code })
+    // })
+    // const data = await response.json();
+    // if (!response.ok) throw new Error(data.message || 'Failed to authenticate');
     res.redirect('/');
   } catch(err) {
     console.error('MyAnimeList login error:', err);
