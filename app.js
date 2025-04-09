@@ -1,11 +1,13 @@
 import express from "express";
 import { createServer } from "http";
 import Routes from "./src/api/v1/routes/index.routes.js";
+import Views from './src/api/v1/views/index.routes.js';
 import dotenv from "dotenv";
 import morgan from "morgan";
 import errorHandler from "./src/api/v1/middlewares/errorHandler.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from 'path';
 
 dotenv.config();
 
@@ -31,6 +33,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 Routes(app);
+
+// View Engine
+app.set('view engine', 'ejs');
+app.set('views', path.resolve('src/api/v1/views'));
+app.use(express.static(path.resolve('public')));
+
+Views(app);
 
 // Error handling middleware
 app.use(errorHandler);

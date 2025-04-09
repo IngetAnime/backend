@@ -2,14 +2,22 @@ import prisma from "../lib/prisma.js";
 import customError from "../utils/customError.js";
 import dayjs from "dayjs";
 import { comparePassword, hashPassword } from "../utils/hash.js";
-import { generateOTP, generateUsername } from "../utils/random.js";
+import { generateRandom } from "../utils/random.js";
 import { sendEmailVerification, sendResetPassword } from "../lib/nodemailer.js";
 import { getToken } from "../utils/jwt.js";
+import { getGoogleInfo, getGoogleToken, setCredential } from "../utils/google.js";
 
 const getUserData = (user) => {
   const expiresIn = process.env.JWT_REFRESH_EXPIRATION || '28d';
   const token = getToken({ id: user.id, type: 'auth_token' }, expiresIn);
-  return { id: user.id, email: user.email, username: user.username, isVerified: user.isVerifed, token };
+  return { 
+    id: user.id, 
+    email: user.email, 
+    username: user.username, 
+    isVerified: user.isVerifed, 
+    ...(user.picture && { picture: user.picture }),
+    token 
+  };
 }
 
 const maskString = (string) => {
@@ -27,11 +35,11 @@ export const register = async (email, password, username) => {
   try {
     // Loop until get valid username
     if (!username) {
-      username = generateUsername(8);
+      username = generateRandom(8, 'alphanumeric');
       let isUnique = false;
       while(!isUnique) {
         if (await prisma.user.findUnique({ where: { username } })) {
-          username = generateUsername(8);
+          username = generateRandom(8, 'alphanumeric');
         } else {
           isUnique = true;
         }
@@ -40,7 +48,7 @@ export const register = async (email, password, username) => {
 
     // Create account
     const hashedPassword = await hashPassword(password);
-    const otpCode = generateOTP(6);
+    const otpCode = generateRandom(6, 'numeric');
     const otpExpiration = dayjs().add(10, "minute").toISOString();
     const user = await prisma.user.create({
       data: { 
@@ -71,7 +79,7 @@ export const register = async (email, password, username) => {
 export const resendEmailVerification = async (id) => {
   try {
     // Update OTP
-    const otpCode = generateOTP(6);
+    const otpCode = generateRandom(6, 'numeric');
     const otpExpiration = dayjs().add(10, "minute").toISOString();
     const user = await prisma.user.update({ 
       where: { id },
@@ -150,7 +158,7 @@ export const forgotPassword = async (identifier) => {
     }
 
     // Create new otp for reset password
-    const otpCode = generateOTP(6);
+    const otpCode = generateRandom(6, 'numeric');
     const otpExpiration = dayjs().add(10, "minute").toISOString();
     user = await prisma.user.update({ 
       where: { id: user.id },
@@ -186,10 +194,67 @@ export const resetPassword = async (id, email, otpCode, newPassword) => {
 
     return { ...(getUserData(user)) };
   } catch(err) {
+    console.log("Error in the resetPassword service");
     if (err.code === "P2025") {
       throw new customError('Invalid token or account', 400);
     }
-    console.log("Error in the resetPassword service");
+    throw err;
+  }
+}
+
+export const loginWithGoogle = async (code) => {
+  try {
+    // Get data from google
+    const { access_token, refresh_token, expiry_date } = await getGoogleToken(code);
+    await setCredential(access_token, refresh_token, expiry_date);
+    const { id, email, picture } = await getGoogleInfo();
+
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (user) { 
+      if (user.googleId === id) { // If email found and already connect to google
+        return { ...(getUserData(user)) };
+      }
+
+      // If email found, but not connect to google  
+      user = await prisma.user.update({ 
+        where: { id: user.id },
+        data: { 
+          googleId: id,
+          ...(!user.picture && picture && { picture })
+        }
+      })
+      
+      return { ...(getUserData(user)) };
+    } 
+    
+    // Generate username
+    let username = email.split('@')[0] + id.slice(-4);
+    let isUnique = false;
+    while(!isUnique) {
+      if (await prisma.user.findUnique({ where: { username } })) {
+        username = email.split('@')[0] + generateRandom(4, 'numeric');
+      } else {
+        isUnique = true;
+      }
+    }
+
+    // Create new user account
+    const hashedPassword = await hashPassword(generateRandom(16, 'ascii-printable'));
+    const otpCode = generateRandom(6, 'numeric');
+    const otpExpiration = dayjs().add(10, "minute").toISOString();
+    user = await prisma.user.create({
+      data: { 
+        username, email, password: hashedPassword, otpCode, otpExpiration, 
+        googleId: id, ...(picture && { picture })
+      }
+    });
+
+    return { ...(getUserData(user)) };
+  } catch(err) {
+    console.log("Error in the loginWithGoogle service");
+    if (err.code === "P2025") {
+      throw new customError('Invalid token or account', 400);
+    }
     throw err;
   }
 }

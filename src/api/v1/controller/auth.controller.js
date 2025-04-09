@@ -99,3 +99,15 @@ export const resetPassword = async (req, res, next) => {
     next(err);
   }
 }
+
+export const loginWithGoogle = async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    const {token, ...data } = await services.loginWithGoogle(code);
+    setAuthCookie(res, token)
+    res.status(200).json({ ...data });
+  } catch(err) {
+    console.log("Error in the loginWithGoogle controller");
+    next(err);
+  }
+}

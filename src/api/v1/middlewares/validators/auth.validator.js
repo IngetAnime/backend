@@ -35,3 +35,9 @@ export const resetPassword = validate(
     path: ["confirmPassword"],
   })
 , 'body');
+
+export const loginWithGoogle = validate(
+  z.object({
+    code: z.string().min(1, "Authorization code is required"),
+  })
+, 'body');

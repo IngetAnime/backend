@@ -11,6 +11,7 @@ router.post('/verify-email', authMiddleware, emailVerificationhHandler, controll
 router.post('/login', validators.login, controllers.login);
 router.post('/logout', controllers.logout);
 router.post('/forgot-password', validators.forgotPassword, controllers.forgotPassword);
-router.post('/reset-password', authMiddleware, resetPasswordHandler, validators.resetPassword, controllers.resetPassword)
+router.post('/reset-password', authMiddleware, resetPasswordHandler, validators.resetPassword, controllers.resetPassword);
+router.post('/google', validators.loginWithGoogle, controllers.loginWithGoogle);
 
 export default router;

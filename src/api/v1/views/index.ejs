@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'IngetAnime' %></title>
+  <style>
+    .wrapper, .profile {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 10px;
+    }
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    img {
+      border-radius: 50%;
+      border: 1px solid black;
+      width: 50px;
+      height: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h1><%= message || 'Selamat Datang' %></h1>
+    <div class="profile">
+      <p>ahmadsubhan</p>
+      <div class="img">
+        <img src="https://lh3.googleusercontent.com/a/ACg8ocIU1A4CyC1-YTbOJX5sxnaYUqL_IUmfz9P-8NN7z4OpbA9hdLA=s96-c" referrerPolicy="no-referrer" />
+      </div>
+    </div>
+  </div>
+</body>
+</html>
