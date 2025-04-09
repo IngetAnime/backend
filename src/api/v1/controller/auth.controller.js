@@ -111,3 +111,15 @@ export const loginWithGoogle = async (req, res, next) => {
     next(err);
   }
 }
+
+export const loginWithMAL = async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    const { token, ...data } = await services.loginWithMAL(code);
+    setAuthCookie(res, token)
+    res.status(200).json({ ...data });
+  } catch(err) {
+    console.log("Error in the loginWithMAL controller");
+    next(err);
+  }
+}

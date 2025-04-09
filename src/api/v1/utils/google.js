@@ -7,7 +7,7 @@ const oauth2Client = new google.auth.OAuth2(
   `${process.env.BASE_URL}/google/callback`,
 )
 
-export const generateAuthorizationUrl = () => {
+export const generateGoogleAuthUrl = () => {
   const scopes = [
     // 'https://www.googleapis.com/auth/user.birthday.read',
     // 'https://www.googleapis.com/auth/user.gender.read',

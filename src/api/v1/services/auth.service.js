@@ -6,6 +6,7 @@ import { generateRandom } from "../utils/random.js";
 import { sendEmailVerification, sendResetPassword } from "../lib/nodemailer.js";
 import { getToken } from "../utils/jwt.js";
 import { getGoogleInfo, getGoogleToken, setCredential } from "../utils/google.js";
+import { getMALProfile, getMALToken } from "../utils/mal.js";
 
 const getUserData = (user) => {
   const expiresIn = process.env.JWT_REFRESH_EXPIRATION || '28d';
@@ -258,6 +259,61 @@ export const loginWithGoogle = async (code) => {
     throw err;
   }
 }
+
+export const loginWithMAL = async (code) => {
+  try {
+    // Get data from MyAnimeList
+    const { access_token, refresh_token, expiry_date } = await getMALToken(code);
+    // await setCredential(access_token, refresh_token, expiry_date);
+    let { id, name, picture } = await getMALProfile(access_token);
+    id = id.toString();
+
+    let user = await prisma.user.findUnique({ where: { malId: id } });
+    if (user) { 
+      if (!user.picture && picture) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { 
+            picture
+          }
+        })
+      }
+      return { ...(getUserData(user)) };
+    } 
+    
+    // Generate username
+    let username = name + id.slice(-4);
+    let isUnique = false;
+    while(!isUnique) {
+      if (await prisma.user.findUnique({ where: { username } })) {
+        username = name + generateRandom(4, 'numeric');
+      } else {
+        isUnique = true;
+      }
+    }
+
+    // Create new user account
+    const hashedPassword = await hashPassword(generateRandom(16, 'ascii-printable'));
+    const otpCode = generateRandom(6, 'numeric');
+    const otpExpiration = dayjs().add(10, "minute").toISOString();
+    user = await prisma.user.create({
+      data: { 
+        username, email: username, password: hashedPassword, otpCode, otpExpiration, 
+        malId: id, ...(picture && { picture })
+      }
+    });
+
+    return { ...(getUserData(user)) };
+  } catch(err) {
+    console.log("Error in the loginWithMAL service", err);
+    if (err.code === "P2025") {
+      throw new customError('Invalid token or account', 400);
+    }
+    throw err;
+  }
+}
+
+
 
 // console.log(await register('ahmadsubhandaryhadi@gmail.com', '12341234', 'ahmadsubhand'))
 // console.log(await resendEmailVerification(16))

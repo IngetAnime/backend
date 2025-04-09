@@ -1,8 +1,8 @@
 
 import cryptoRandomString from 'crypto-random-string';
 
-export const generateRandom = async (length = 16, type = 'ascii-printable', characters) => {
+export const generateRandom = (length = 16, type, characters) => {
   return cryptoRandomString({
-    length, type, ...(characters && { characters })
+    length, ...(type && { type }), ...(characters && { characters })
   })
 } 

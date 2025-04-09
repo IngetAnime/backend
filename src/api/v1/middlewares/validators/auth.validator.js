@@ -36,7 +36,7 @@ export const resetPassword = validate(
   })
 , 'body');
 
-export const loginWithGoogle = validate(
+export const codeValidator = validate(
   z.object({
     code: z.string().min(1, "Authorization code is required"),
   })

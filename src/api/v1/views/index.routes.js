@@ -1,11 +1,11 @@
 import express from 'express';
-// import mal from './mal/mal.routes.js';
+import mal from './mal/mal.routes.js';
 import google from './google/google.routes.js';
 
 export default (app) => {
   const router = express.Router();
 
-  // router.use('/mal', mal);
+  router.use('/mal', mal);
   router.use('/google', google);
   
   app.get('/', (req, res) => {

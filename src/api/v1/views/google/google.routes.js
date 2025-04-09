@@ -1,11 +1,11 @@
 import express from 'express';
-import { generateAuthorizationUrl, getGoogleToken } from '../../utils/google.js';
+import { generateGoogleAuthUrl, getGoogleToken } from '../../utils/google.js';
 
 const router = express.Router();
 
 router.get('/login', (req, res) => {  
   try {
-    const authorizationUrl = generateAuthorizationUrl();
+    const authorizationUrl = generateGoogleAuthUrl();
     res.redirect(authorizationUrl);
   } catch(err) {
     console.error('Login page error', err);
