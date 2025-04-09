@@ -230,7 +230,7 @@ export const loginWithGoogle = async (code) => {
     } 
     
     // Generate username
-    let username = email.split('@')[0] + id.slice(-4);
+    let username = email.split('@')[0];
     let isUnique = false;
     while(!isUnique) {
       if (await prisma.user.findUnique({ where: { username } })) {
@@ -241,12 +241,11 @@ export const loginWithGoogle = async (code) => {
     }
 
     // Create new user account
-    const hashedPassword = await hashPassword(generateRandom(16, 'ascii-printable'));
     const otpCode = generateRandom(6, 'numeric');
     const otpExpiration = dayjs().add(10, "minute").toISOString();
     user = await prisma.user.create({
       data: { 
-        username, email, password: hashedPassword, otpCode, otpExpiration, isVerifed: true,
+        username, email, otpCode, otpExpiration, isVerifed: true, // account without password
         googleId: id, ...(picture && { picture })
       }
     });
@@ -283,7 +282,7 @@ export const loginWithMAL = async (code) => {
     } 
     
     // Generate username
-    let username = name + id.slice(-4);
+    let username = name;
     let isUnique = false;
     while(!isUnique) {
       if (await prisma.user.findUnique({ where: { username } })) {
@@ -294,13 +293,12 @@ export const loginWithMAL = async (code) => {
     }
 
     // Create new user account
-    const hashedPassword = await hashPassword(generateRandom(16, 'ascii-printable'));
     const otpCode = generateRandom(6, 'numeric');
     const otpExpiration = dayjs().add(10, "minute").toISOString();
     user = await prisma.user.create({
       data: { 
-        username, email: username, password: hashedPassword, otpCode, otpExpiration, isVerifed: true,
-        malId: id,...(picture && { picture })
+        username, otpCode, otpExpiration, isVerifed: true, // account without email and password
+        malId: id, malRefreshToken: refresh_token, ...(picture && { picture })
       }
     });
 
