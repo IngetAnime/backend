@@ -1,5 +1,6 @@
 import express from "express";
 import auth from "./auth.routes.js";
+import mal from "./mal.routes.js";
 
 export default (app) => {
   const router = express.Router();
@@ -9,6 +10,7 @@ export default (app) => {
   })
 
   router.use('/auth', auth);
+  router.use('/mal', mal);
 
   app.use('/api/v1', router);
 }

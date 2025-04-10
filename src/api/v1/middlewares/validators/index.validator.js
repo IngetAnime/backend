@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { string, z } from "zod";
 import customError from '../../utils/customError.js';
 
 // Authentication
@@ -30,6 +30,78 @@ export const identifier = z
       message: "Identifier must be a valid email or username",
     }
   )
+
+// MyAnimeList
+export const q = z
+  .string()
+export const limit = (min, max) => {
+  return z
+    .string()
+    .transform((val) => Number(val))
+    .refine((val) => Number.isInteger(val) && val >= min && val <= max, {
+      message: `Limit is integer number between ${min} and ${max}`
+    })
+}
+export const offset = z
+  .string()
+  .transform((val) => Number(val))
+  .refine((val) => Number.isInteger(val) && val >= 0, {
+    message: `Offset is integer number start from 0`
+  })
+export const fields = z
+  .string()
+  .regex(/^[^,\s]+(,[^,\s]+)*$/, {
+    message: "Invalid format. Value must be seperated by comma without any space"
+  })
+export const anime_id = z
+  .string()
+  .transform((val) => (val ? Number(val) : undefined))
+  .refine((val) => (val === undefined || (Number.isInteger(val) && val > 0)), "Anime ID is positive integer number")
+export const ranking_type = z
+  .enum(["all", "airing", "upcoming", "tv", "ova", "movie", "special", "bypopularity", "favorite"], {
+    errorMap: () => ({ 
+      message: "ranking_type must be one of: all, airing, upcoming, tv, ova, movie, special, bypopularity, or favorite"
+    })
+  })
+export const sortAnime = z.enum(["anime_score", "anime_num_list_users"], {
+    errorMap: () => ({ 
+      message: "sort must be one of: anime_score or anime_num_list_users"
+    })
+  })
+export const year = z
+  .string()
+  .transform((val) => Number(val))
+  .refine((val) => Number.isInteger(val) && val >= 1917, {
+    message: 'Year start from 1917'
+  })
+export const season = z
+  .enum(["winter", "spring", "summer", "fall"], {
+    errorMap: () => ({ 
+      message: "season must be one of: winter, spring, summer, or fall"
+    })
+  })
+export const status = z
+  .enum(["watching", "completed", "plan_to_watch", "on_hold", "dropped"], {
+    errorMap: () => ({ 
+      message: "status must be one of: watching, completed, plan_to_watch, on_hold, or dropped"
+    }),
+  })
+export const score = z.number().min(1).max(10)
+export const num_watched_episodes = z.number().min(1)
+export const date = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid format. Valid format: YYYY-MM-DD")
+  .refine(
+    (value) => !isNaN(Date.parse(value)),
+    "Invalid date"
+  )
+export const sortList = z
+  .enum(["list_score", "list_updated_at", "anime_title", "anime_start_date", "anime_id"], {
+    errorMap: () => ({ 
+      message: "Sort harus salah satu dari list_score, list_updated_at, anime_title, anime_start_date, atau anime_id"
+    })
+  })
+
 
 export const validate = (schema, payload) => (req, res, next) => {
   try {

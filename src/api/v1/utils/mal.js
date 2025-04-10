@@ -46,6 +46,38 @@ export const getMALToken = async (code) => {
   }
 }
 
+export const getMALNewAccessToken = async (malRefreshToken) => {
+  try {
+    const url = `https://myanimelist.net/v1/oauth2/token`;
+    const params = new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: malRefreshToken
+    });
+    const credentials = Buffer.from(`${process.env.MAL_CLIENT_ID}:${process.env.MAL_CLIENT_SECRET}`).toString("base64");
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${credentials}`
+      },
+      body: params.toString()
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        ...(data.message && { message: data.message }),
+        ...(data.error && { error: data.error })
+      }
+    };
+    return { access_token: data.access_token, refresh_token: data.refresh_token };
+  } catch(err) {
+    console.log('Failed to get new MyAnimeList token');
+    throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
+  }
+}
+
 export const getMALProfile = async (access_token) => {
   try {
     const url = 'https://api.myanimelist.net/v2/users/@me?fields=anime_statistics';

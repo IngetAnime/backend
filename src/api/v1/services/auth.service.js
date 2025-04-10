@@ -270,14 +270,14 @@ export const loginWithMAL = async (code) => {
 
     let user = await prisma.user.findUnique({ where: { malId: id } });
     if (user) { 
-      if (!user.picture && picture) {
-        user = await prisma.user.update({
-          where: { id: user.id },
-          data: { 
-            picture
-          }
-        })
-      }
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { 
+          malAccessToken: access_token,
+          malRefreshToken: refresh_token,
+          ...(!user.picture && picture && { picture })
+        }
+      })
       return { ...(getUserData(user)), statusCode: 200 };
     } 
     
@@ -298,7 +298,8 @@ export const loginWithMAL = async (code) => {
     user = await prisma.user.create({
       data: { 
         username, otpCode, otpExpiration, isVerifed: true, // account without email and password
-        malId: id, malRefreshToken: refresh_token, ...(picture && { picture })
+        malId: id, malAccessToken: access_token, malRefreshToken: refresh_token, 
+        ...(picture && { picture })
       }
     });
 
