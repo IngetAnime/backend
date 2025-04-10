@@ -1,9 +1,9 @@
-import prisma from "../lib/prisma.js";
+import prisma from "../utils/prisma.js";
 import customError from "../utils/customError.js";
 import dayjs from "dayjs";
 import { comparePassword, hashPassword } from "../utils/hash.js";
 import { generateRandom } from "../utils/random.js";
-import { sendEmailVerification, sendResetPassword } from "../lib/nodemailer.js";
+import { sendEmailVerification, sendResetPassword } from "../utils/mailer.js";
 import { getToken } from "../utils/jwt.js";
 import { getGoogleInfo, getGoogleToken, setCredential } from "../utils/google.js";
 import { getMALProfile, getMALToken } from "../utils/mal.js";

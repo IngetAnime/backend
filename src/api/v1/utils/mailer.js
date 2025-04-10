@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import path from "path";
 import ejs from "ejs";
-import { getToken } from "../utils/jwt.js";
+import { getToken } from "./jwt.js";
 
 const mailPath = "src/api/v1/views/mail";
 
