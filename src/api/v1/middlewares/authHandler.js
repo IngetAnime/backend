@@ -38,13 +38,13 @@ export const optAuthMiddleware = async (req, res, next) => {
       token = authHeader.split(" ")[1];
     } else if (tokenFromCookie) {
       token = tokenFromCookie;
-    } else {
-      next();
     }
 
-    req.user = verifyToken(token);
-    if (req.user.type !== 'auth_token') {
-      next(new customError('Invalid token type', 403));
+    if (token) {
+      req.user = verifyToken(token);
+      if (req.user.type !== 'auth_token') {
+        next(new customError('Invalid token type', 403));
+      }
     }
     next();
   } catch(err) {

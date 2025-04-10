@@ -1,4 +1,4 @@
-import { string, z } from "zod";
+import { z } from "zod";
 import customError from '../../utils/customError.js';
 
 // Authentication
@@ -33,7 +33,7 @@ export const identifier = z
 
 // MyAnimeList
 export const q = z
-  .string()
+  .string().min(3)
 export const limit = (min, max) => {
   return z
     .string()

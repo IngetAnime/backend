@@ -3,6 +3,10 @@ import customError from "../utils/customError.js";
 import { getMALProfile, getMALNewAccessToken } from "../utils/mal.js";
 
 export const getMALConnection = async (userId) => {
+  if (!userId) {
+    return undefined;
+  }
+
   const { malAccessToken, malRefreshToken } = await prisma.user.findUnique({ where: { id: userId } });
   
   if (!malAccessToken) { // If token not provided
@@ -54,14 +58,19 @@ watching, completed, on_hold, dropped, plan_to_watch
 - num_watched_episodes = number of episodes watched
 */
 
-export const getAnimeList = async (user_id, q, limit=100, offset=0, fields='') => {
+export const getAnimeList = async (user_id, q, limit, offset, fields) => {
   try {
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
 
     // Send request to MyAnimeList
     const url = `https://api.myanimelist.net/v2/anime`;
-    const params = new URLSearchParams({ q, limit, offset, fields });
+    const params = new URLSearchParams({ 
+      q,
+      ...(limit && { limit }),
+      ...(offset && { offset }),
+      ...(fields && { fields }),
+    });
     const response = await fetch(`${url}?${params.toString()}`, {
       method: 'GET',
       headers: {
@@ -100,7 +109,7 @@ export const getAnimeDetails = async (user_id, anime_id, fields) => {
 
     // Send request to MyAnimeList
     const url = `https://api.myanimelist.net/v2/anime/${anime_id}`;
-    const params = new URLSearchParams({ fields });
+    const params = new URLSearchParams({ ...( fields && { fields }) });
     const response = await fetch(`${url}?${params.toString()}`, {
       method: 'GET',
       headers: {
@@ -127,14 +136,19 @@ export const getAnimeDetails = async (user_id, anime_id, fields) => {
   }
 }
 
-export const getAnimeRanking = async (user_id, ranking_type, limit=100, offset=0, fields='') => {
+export const getAnimeRanking = async (user_id, ranking_type, limit, offset, fields='') => {
   try {
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
 
     // Send request to MyAnimeList
     const url = `https://api.myanimelist.net/v2/anime/ranking`;
-    const params = new URLSearchParams({ ranking_type, limit, offset, fields });
+    const params = new URLSearchParams({ 
+      ranking_type, 
+      ...(limit && { limit }),
+      ...(offset && { offset }),
+      ...(fields && { fields }),
+     });
     const response = await fetch(`${url}?${params.toString()}`, {
       method: 'GET',
       headers: {
@@ -166,14 +180,19 @@ export const getAnimeRanking = async (user_id, ranking_type, limit=100, offset=0
   }
 }
 
-export const getSeasonalAnime = async (user_id, year, season, sort, limit=100, offset=0, fields='') => {
+export const getSeasonalAnime = async (user_id, year, season, sort, limit, offset, fields='') => {
   try {
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
 
     // Send request to MyAnimeList
     const url = `https://api.myanimelist.net/v2/anime/season/${year}/${season}`;
-    const params = new URLSearchParams({ sort, limit, offset, fields });
+    const params = new URLSearchParams({ 
+      ...(sort && { sort }),
+      ...(limit && { limit }),
+      ...(offset && { offset }),
+      ...(fields && { fields }),
+    });
     const response = await fetch(`${url}?${params.toString()}`, {
       method: 'GET',
       headers: {
@@ -207,7 +226,7 @@ export const getSeasonalAnime = async (user_id, year, season, sort, limit=100, o
 
 // User have to connect with MyAnimeList account
 
-export const getSuggestedAnime = async (user_id, limit=100, offset=0, fields='') => {
+export const getSuggestedAnime = async (user_id, limit, offset, fields) => {
   try {
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
@@ -217,7 +236,11 @@ export const getSuggestedAnime = async (user_id, limit=100, offset=0, fields='')
 
     // Send request to MyAnimeList
     const url = `https://api.myanimelist.net/v2/anime/suggestions`;
-    const params = new URLSearchParams({ limit, offset, fields });
+    const params = new URLSearchParams({ 
+      ...(limit && { limit }),
+      ...(offset && { offset }),
+      ...(fields && { fields }),
+    });
     const response = await fetch(`${url}?${params.toString()}`, {
       method: 'GET',
       headers: {
@@ -257,7 +280,14 @@ export const updateMyAnimeListStatus = async (
 
     // Send request to MyAnimeList
     const url = `https://api.myanimelist.net/v2/anime/${anime_id}/my_list_status`;
-    const params = new URLSearchParams({ status, score });
+    const params = new URLSearchParams({ 
+      ...(status && { status }),
+      ...(score && { score }),
+      ...(num_watched_episodes && { num_watched_episodes }),
+      ...(start_date && { start_date }),
+      ...(finish_date && { finish_date }),
+      
+    });
     const response = await fetch(url, {
       method: 'PATCH',
       headers: {
@@ -314,7 +344,7 @@ export const deleteMyAnimeListItem = async (user_id, anime_id) => {
   }
 }
 
-export const getUserAnimeList = async (user_id, status, sort, limit=100, offset=0, fields='') => {
+export const getUserAnimeList = async (user_id, status, sort, limit, offset, fields) => {
   try {
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
@@ -324,7 +354,13 @@ export const getUserAnimeList = async (user_id, status, sort, limit=100, offset=
 
     // Send request to MyAnimeList
     const url = `https://api.myanimelist.net/v2/users/@me/animelist`;
-    const params = new URLSearchParams({ status, sort, limit, offset, fields });
+    const params = new URLSearchParams({ 
+      ...(status && { status }),
+      ...(sort && { sort }),
+      ...(limit && { limit }),
+      ...(offset && { offset }),
+      ...(fields && { fields }),
+    });
     const response = await fetch(`${url}?${params.toString()}`, {
       method: 'GET',
       headers: {
@@ -368,39 +404,3 @@ export const getMyUserInformation = async (user_id) => {
     throw new customError(`${err.message || err.error}`, err.status, err.error || err);
   }
 }
-
-// console.log((await getAnimeList(21, 
-//   'def502009b0be1f211cdb2434cf3d486b6a4aeba226f69a2592521db879da8b0d5b8258fec7ae7f1dfbb2cc817297389f4ba6063a306e6f0ee2e4086c5a180879d7fc70e5faffe493ab7c2cbe095e05e9bd8319d6a12e9ff41f3857f151a0dd1c5d934c4f3d76538f24253c1fad5c310f9041638712ee2c1cde2e7c218a4ee10265466fd6e3a655234fa201d91c3296ec4854626e5ef414056f87300914be14d5d5794f8d0ca59daf4aff765dbaed41fcc4c4a91f41927f5849df4239f8e6d96bf37901bf7db58a90d88e0fb4f7e885534e363a42553dcfb113922e4ac3d2204c1693d1e2179aec746acbd336a1e909c192235bcc6899be45cdf6cd8649fdd96d51fbe0aec983cab96c061e98b28262a3c3fed98636e1faafef4f25bf8a2fcb72644ad09126335e9ab7e30d7493d5a702da46748c217251d195cc5d30482bcff2bce363681b8716fb702297b526bcaaa468926a11dcf401f612304589a90f757652f0a24de541abe53108ea53a7ef24c3a63588dfa5c283e66a30bb6d5665eb551ee7f799ca5e0e330',
-//   'Frieren'
-// )).data[0].node)
-
-// console.log((await getAnimeDetails(21, 52991, 'my_list_status')))
-
-// console.log((await getAnimeRanking(21, 
-//   'def502009b0be1f211cdb2434cf3d486b6a4aeba226f69a2592521db879da8b0d5b8258fec7ae7f1dfbb2cc817297389f4ba6063a306e6f0ee2e4086c5a180879d7fc70e5faffe493ab7c2cbe095e05e9bd8319d6a12e9ff41f3857f151a0dd1c5d934c4f3d76538f24253c1fad5c310f9041638712ee2c1cde2e7c218a4ee10265466fd6e3a655234fa201d91c3296ec4854626e5ef414056f87300914be14d5d5794f8d0ca59daf4aff765dbaed41fcc4c4a91f41927f5849df4239f8e6d96bf37901bf7db58a90d88e0fb4f7e885534e363a42553dcfb113922e4ac3d2204c1693d1e2179aec746acbd336a1e909c192235bcc6899be45cdf6cd8649fdd96d51fbe0aec983cab96c061e98b28262a3c3fed98636e1faafef4f25bf8a2fcb72644ad09126335e9ab7e30d7493d5a702da46748c217251d195cc5d30482bcff2bce363681b8716fb702297b526bcaaa468926a11dcf401f612304589a90f757652f0a24de541abe53108ea53a7ef24c3a63588dfa5c283e66a30bb6d5665eb551ee7f799ca5e0e330',
-//   'all'
-// )).data[0].node)
-
-// console.log((await getSeasonalAnime(21, 
-//   'def502009b0be1f211cdb2434cf3d486b6a4aeba226f69a2592521db879da8b0d5b8258fec7ae7f1dfbb2cc817297389f4ba6063a306e6f0ee2e4086c5a180879d7fc70e5faffe493ab7c2cbe095e05e9bd8319d6a12e9ff41f3857f151a0dd1c5d934c4f3d76538f24253c1fad5c310f9041638712ee2c1cde2e7c218a4ee10265466fd6e3a655234fa201d91c3296ec4854626e5ef414056f87300914be14d5d5794f8d0ca59daf4aff765dbaed41fcc4c4a91f41927f5849df4239f8e6d96bf37901bf7db58a90d88e0fb4f7e885534e363a42553dcfb113922e4ac3d2204c1693d1e2179aec746acbd336a1e909c192235bcc6899be45cdf6cd8649fdd96d51fbe0aec983cab96c061e98b28262a3c3fed98636e1faafef4f25bf8a2fcb72644ad09126335e9ab7e30d7493d5a702da46748c217251d195cc5d30482bcff2bce363681b8716fb702297b526bcaaa468926a11dcf401f612304589a90f757652f0a24de541abe53108ea53a7ef24c3a63588dfa5c283e66a30bb6d5665eb551ee7f799ca5e0e330',
-//   2025, 'summer'
-// )).data[0].node)
-
-// console.log((await getSuggestedAnime(21, 
-//   'def502009b0be1f211cdb2434cf3d486b6a4aeba226f69a2592521db879da8b0d5b8258fec7ae7f1dfbb2cc817297389f4ba6063a306e6f0ee2e4086c5a180879d7fc70e5faffe493ab7c2cbe095e05e9bd8319d6a12e9ff41f3857f151a0dd1c5d934c4f3d76538f24253c1fad5c310f9041638712ee2c1cde2e7c218a4ee10265466fd6e3a655234fa201d91c3296ec4854626e5ef414056f87300914be14d5d5794f8d0ca59daf4aff765dbaed41fcc4c4a91f41927f5849df4239f8e6d96bf37901bf7db58a90d88e0fb4f7e885534e363a42553dcfb113922e4ac3d2204c1693d1e2179aec746acbd336a1e909c192235bcc6899be45cdf6cd8649fdd96d51fbe0aec983cab96c061e98b28262a3c3fed98636e1faafef4f25bf8a2fcb72644ad09126335e9ab7e30d7493d5a702da46748c217251d195cc5d30482bcff2bce363681b8716fb702297b526bcaaa468926a11dcf401f612304589a90f757652f0a24de541abe53108ea53a7ef24c3a63588dfa5c283e66a30bb6d5665eb551ee7f799ca5e0e330',
-// )).data[1].node)
-
-// console.log((await updateMyAnimeListStatus(21, 
-//   'def502009b0be1f211cdb2434cf3d486b6a4aeba226f69a2592521db879da8b0d5b8258fec7ae7f1dfbb2cc817297389f4ba6063a306e6f0ee2e4086c5a180879d7fc70e5faffe493ab7c2cbe095e05e9bd8319d6a12e9ff41f3857f151a0dd1c5d934c4f3d76538f24253c1fad5c310f9041638712ee2c1cde2e7c218a4ee10265466fd6e3a655234fa201d91c3296ec4854626e5ef414056f87300914be14d5d5794f8d0ca59daf4aff765dbaed41fcc4c4a91f41927f5849df4239f8e6d96bf37901bf7db58a90d88e0fb4f7e885534e363a42553dcfb113922e4ac3d2204c1693d1e2179aec746acbd336a1e909c192235bcc6899be45cdf6cd8649fdd96d51fbe0aec983cab96c061e98b28262a3c3fed98636e1faafef4f25bf8a2fcb72644ad09126335e9ab7e30d7493d5a702da46748c217251d195cc5d30482bcff2bce363681b8716fb702297b526bcaaa468926a11dcf401f612304589a90f757652f0a24de541abe53108ea53a7ef24c3a63588dfa5c283e66a30bb6d5665eb551ee7f799ca5e0e330',
-//   52991, 'on_hold', 9
-// )))
-
-// console.log((await deleteMyAnimeListItem(21, 
-//   'def502009b0be1f211cdb2434cf3d486b6a4aeba226f69a2592521db879da8b0d5b8258fec7ae7f1dfbb2cc817297389f4ba6063a306e6f0ee2e4086c5a180879d7fc70e5faffe493ab7c2cbe095e05e9bd8319d6a12e9ff41f3857f151a0dd1c5d934c4f3d76538f24253c1fad5c310f9041638712ee2c1cde2e7c218a4ee10265466fd6e3a655234fa201d91c3296ec4854626e5ef414056f87300914be14d5d5794f8d0ca59daf4aff765dbaed41fcc4c4a91f41927f5849df4239f8e6d96bf37901bf7db58a90d88e0fb4f7e885534e363a42553dcfb113922e4ac3d2204c1693d1e2179aec746acbd336a1e909c192235bcc6899be45cdf6cd8649fdd96d51fbe0aec983cab96c061e98b28262a3c3fed98636e1faafef4f25bf8a2fcb72644ad09126335e9ab7e30d7493d5a702da46748c217251d195cc5d30482bcff2bce363681b8716fb702297b526bcaaa468926a11dcf401f612304589a90f757652f0a24de541abe53108ea53a7ef24c3a63588dfa5c283e66a30bb6d5665eb551ee7f799ca5e0e330',
-//   52830
-// )))
-
-// console.log((await getUserAnimeList(21, 
-//   'def502009b0be1f211cdb2434cf3d486b6a4aeba226f69a2592521db879da8b0d5b8258fec7ae7f1dfbb2cc817297389f4ba6063a306e6f0ee2e4086c5a180879d7fc70e5faffe493ab7c2cbe095e05e9bd8319d6a12e9ff41f3857f151a0dd1c5d934c4f3d76538f24253c1fad5c310f9041638712ee2c1cde2e7c218a4ee10265466fd6e3a655234fa201d91c3296ec4854626e5ef414056f87300914be14d5d5794f8d0ca59daf4aff765dbaed41fcc4c4a91f41927f5849df4239f8e6d96bf37901bf7db58a90d88e0fb4f7e885534e363a42553dcfb113922e4ac3d2204c1693d1e2179aec746acbd336a1e909c192235bcc6899be45cdf6cd8649fdd96d51fbe0aec983cab96c061e98b28262a3c3fed98636e1faafef4f25bf8a2fcb72644ad09126335e9ab7e30d7493d5a702da46748c217251d195cc5d30482bcff2bce363681b8716fb702297b526bcaaa468926a11dcf401f612304589a90f757652f0a24de541abe53108ea53a7ef24c3a63588dfa5c283e66a30bb6d5665eb551ee7f799ca5e0e330',
-//   'watching', 'anime_title'
-// )).data[0].node)

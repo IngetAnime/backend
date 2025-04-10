@@ -6,7 +6,7 @@ import {
 
 export const getAnimeList = validate(
   z.object({
-    q: q.optional(),
+    q,
     limit: limit(1, 100).optional(),
     offset: offset.optional(),
     fields: fields.optional()
