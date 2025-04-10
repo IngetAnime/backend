@@ -1,4 +1,5 @@
 import { z } from "zod";
+import customError from '../../utils/customError.js';
 
 // Authentication
 export const email = z.string().email().nonempty()
@@ -49,16 +50,12 @@ export const validate = (schema, payload) => (req, res, next) => {
     next();
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const fieldErrors = error.errors.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      }));
-
-      return res.status(400).json({
-        message: 'Invalid input data',
-        error: fieldErrors
-      });
+      // const fieldErrors = error.errors.map((issue) => ({
+      //   field: issue.path.join("."),
+      //   message: issue.message,
+      // }));
+      next(new customError('Invalid input data', 400, error))
     }
-    next();
+    next(error);
   }  
 };

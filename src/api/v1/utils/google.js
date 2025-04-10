@@ -30,8 +30,26 @@ export const setCredential = async (access_token, refresh_token, expiry_date) =>
 }
 
 export const getGoogleToken = async (code) => {
-  let { tokens } = await oauth2Client.getToken(code);
-  return tokens;
+  try {
+    let { tokens } = await oauth2Client.getToken(code);
+    return tokens;
+  } catch(err) {
+    console.log('Failed to get Google token');
+    if (err.response) {
+      // API error response is available
+      const googleError = err.response.data;
+      console.log(googleError);
+      throw new customError(
+        `Error response from Google: ${googleError.error_description || googleError.error}`, err.response.status, googleError.error || googleError
+      );
+    } else if (err.request) {
+      // No response received
+      throw new customError(`No response received from Google: ${err.message}`);
+    } else {
+      // Other errors
+      throw new customError(`Request error: ${err.message}`);
+    }
+  }
 }
 
 export const getGoogleInfo = async () => {
@@ -40,11 +58,14 @@ export const getGoogleInfo = async () => {
     const res = await info.userinfo.get();
     return res.data;
   } catch(err) {
-    console.log('Failed to connect to Google API');
+    console.log('Failed to get Google token');
     if (err.response) {
       // API error response is available
-      console.log(err.response.data);
-      throw new customError(`Error response from Google: ${err.response.data.error}`, err.response.status);
+      const googleError = err.response.data;
+      console.log(googleError);
+      throw new customError(
+        `Error response from Google: ${googleError.error_description || googleError.error}`, err.response.status, googleError.error || googleError
+      );
     } else if (err.request) {
       // No response received
       throw new customError(`No response received from Google: ${err.message}`);

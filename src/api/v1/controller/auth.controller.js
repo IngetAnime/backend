@@ -1,4 +1,3 @@
-import customError from '../utils/customError.js';
 import * as services from '../services/auth.service.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration.js';
