@@ -1,6 +1,6 @@
 import { verifyToken } from "../utils/jwt.js";
 import customError from "../utils/customError.js";
-// import prisma from "../lib/prisma.js";
+import prisma from "../utils/prisma.js";
 
 export const authMiddleware = async (req, res, next) => {
   try {
@@ -81,6 +81,18 @@ export const resetPasswordHandler = async (req, res, next) => {
     next()
   } else {
     next(new customError('Invalid token type', 403));
+  }
+}
+
+export const adminHandler = async (req, res, next) => {
+  const { id } = req.user;
+  const { role } = await prisma.user.findUnique({
+    where: { id }
+  })
+  if (role === 'admin') {
+    next()
+  } else {
+    next(new customError('Admin only', 403))
   }
 }
 

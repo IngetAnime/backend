@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { 
-  validate, q, limit, offset, fields, anime_id, ranking_type, sortAnime,
-  year, season, status, score, num_watched_episodes, date, sortList
+  validate, q, limit, offset, fields, id, ranking_type, sortAnime,
+  year, season, status, score, num_watched_episodes, date, sortList,
 } from './index.validator.js';
 
 export const getAnimeList = validate(
@@ -15,7 +15,7 @@ export const getAnimeList = validate(
 
 export const getAnimeDetailsP = validate(
   z.object({
-    anime_id,
+    anime_id: id,
   })
 , 'params');
 

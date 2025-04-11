@@ -53,10 +53,10 @@ export const fields = z
   .regex(/^[^,\s]+(,[^,\s]+)*$/, {
     message: "Invalid format. Value must be seperated by comma without any space"
   })
-export const anime_id = z
+export const id = z
   .string()
   .transform((val) => (val ? Number(val) : undefined))
-  .refine((val) => (val === undefined || (Number.isInteger(val) && val > 0)), "Anime ID is positive integer number")
+  .refine((val) => (val === undefined || (Number.isInteger(val) && val >= 0)), "Positive integer number")
 export const ranking_type = z
   .enum(["all", "airing", "upcoming", "tv", "ova", "movie", "special", "bypopularity", "favorite"], {
     errorMap: () => ({ 
@@ -87,7 +87,7 @@ export const status = z
     }),
   })
 export const score = z.number().min(1).max(10)
-export const num_watched_episodes = z.number().min(1)
+export const num_watched_episodes = z.number().int().nonnegative()
 export const date = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid format. Valid format: YYYY-MM-DD")
@@ -98,10 +98,39 @@ export const date = z
 export const sortList = z
   .enum(["list_score", "list_updated_at", "anime_title", "anime_start_date", "anime_id"], {
     errorMap: () => ({ 
-      message: "Sort harus salah satu dari list_score, list_updated_at, anime_title, anime_start_date, atau anime_id"
+      message: "sort must be one of: list_score, list_updated_at, anime_title, anime_start_date, or anime_id"
     })
   })
 
+// Platform
+export const link = z.string().url()
+export const oneAccessType = z
+  .enum(["limited_time", "subscription", "free"], {
+    errorMap: () => ({ message: "accessType must be one of: limited_time, subscription, or free" })
+  })
+export const manyAccessType = z
+  .string()
+  .transform((val) => val?.split(",").map((s) => s.trim()))
+  .refine(
+    (values) => values.every((value) => ["limited_time", "subscription", "free"].includes(value)),
+    {
+      message: "accessType must be one of: limited_time, subscription, or free. If more than one, please seperate them by comma without any space",
+    }
+  )
+export const sortByPlatform = z
+  .enum(["releaseAt", "name", "animeId", "episodesAired"], {
+    errorMap: () => ({ message: "accessType must be one of: releaseAt, name, animeId, or episodesAired" })
+  })
+export const sortOrder = z
+  .enum(["asc", "desc"], {
+    errorMap: () => ({ message: "sortOrder must be one of: asc or desc" })
+  })
+export const dateTime = z
+  .string()
+  .refine(
+    (value) => !isNaN(Date.parse(value)),
+    "Invalid datetime. Value must be ISO String format"
+  )
 
 export const validate = (schema, payload) => (req, res, next) => {
   try {
