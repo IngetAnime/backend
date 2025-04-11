@@ -87,6 +87,10 @@ export const resendEmailVerification = async (id) => {
       data: { otpCode, otpExpiration }
     });
     
+    if (!user.email) {
+      throw new customError('Email address not found', 404);
+    }
+
     await sendEmailVerification(user.email, user.otpCode);
     
     return { ...(getUserData(user)) };
