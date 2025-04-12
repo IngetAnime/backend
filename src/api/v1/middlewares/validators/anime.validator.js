@@ -1,5 +1,11 @@
-import { z } from "zod";
-import { validate, num_watched_episodes, q, link, dateTime, oneAnimeStatus, id, manyAnimeStatus } from './index.validator.js';
+import { optional, z } from "zod";
+import { 
+  validate, num_watched_episodes, q, link, dateTime, oneAnimeStatus, id, manyAnimeStatus, score, date, status, booleanB, 
+  manyStatus,
+  booleanQ,
+  sortOrder,
+  sortByAnimeList
+} from './index.validator.js';
 
 export const createAnime = validate(
   z.object({
@@ -43,5 +49,29 @@ export const getAllAnime = validate(
     episodeTotalMinimum: id.optional(),
     episodeTotalMaximum: id.optional(),
     status: manyAnimeStatus.optional()
+  })
+, 'query')
+
+export const createOrUpdateAnimeList = validate(
+  z.object({
+    platformId: num_watched_episodes.optional(),
+    episodesDifference: num_watched_episodes.optional(), 
+    progress: num_watched_episodes.optional(), 
+    score: score.optional(), 
+    startDate: date.optional(), 
+    finishDate: date.optional(), 
+    status: status.optional(), 
+    isSyncedWithMal: booleanB.optional()
+  })
+, 'body')
+
+export const getAllAnimeList = validate(
+  z.object({
+    episodesDifferenceMinimum: id.optional(),
+    episodesDifferenceMaximum: id.optional(),
+    status: manyStatus.optional(),
+    isSyncedWithMal: booleanQ.optional(),
+    sortBy: sortByAnimeList.optional(),
+    sortOrder: sortOrder.optional()
   })
 , 'query')

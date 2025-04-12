@@ -49,7 +49,7 @@ export const getAllAnime = async (req, res, next) => {
   try {
     const { title, releaseAtStart, releaseAtEnd, episodeTotalMinimum, episodeTotalMaximum, status } = req.query;
     const data = await services.getAllAnime(
-      title, releaseAtStart, releaseAtEnd, episodeTotalMinimum, episodeTotalMaximum, status
+      title, releaseAtStart, releaseAtEnd, parseInt(episodeTotalMinimum), parseInt(episodeTotalMaximum), status
     );
     res.status(200).json({ ...data });
   } catch(err) {
@@ -57,6 +57,62 @@ export const getAllAnime = async (req, res, next) => {
     next(err);
   }
 }
+
+export const createOrUpdateAnimeList = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id)
+    const animeId = parseInt(req.params.animeId);
+    const { platformId, episodesDifference, progress, score, startDate, finishDate, status, isSyncedWithMal } = req.body;
+    const { statusCode, ...data} = await services.createOrUpdateAnimeList(
+      userId, animeId, platformId, episodesDifference, progress, score, startDate, finishDate, status, isSyncedWithMal
+    );
+    res.status(statusCode).json({ ...data });
+  } catch(err) {
+    console.log("Error in the createOrUpdateAnimeList controller");
+    next(err);
+  }
+}
+
+export const getAnimeListDetail = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id)
+    const animeId = parseInt(req.params.animeId);
+    const data = await services.getAnimeListDetail(userId, animeId);
+    res.status(200).json({ ...data });
+  } catch(err) {
+    console.log("Error in the getAnimeListDetail controller");
+    next(err);
+  }
+}
+
+export const deleteAnimeList = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id)
+    const animeId = parseInt(req.params.animeId);
+    const data = await services.deleteAnimeList(userId, animeId);
+    res.status(200).json({ ...data });
+  } catch(err) {
+    console.log("Error in the deleteAnimeList controller");
+    next(err);
+  }
+}
+
+export const getAllAnimeList = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id)
+    const { episodesDifferenceMinimum, episodesDifferenceMaximum, status, isSyncedWithMal, sortBy, sortOrder } = req.query;
+    const data = await services.getAllAnimeList(
+      userId, parseInt(episodesDifferenceMinimum), parseInt(episodesDifferenceMaximum), status, isSyncedWithMal, 
+      sortBy, sortOrder
+    );
+    res.status(200).json({ ...data });
+  } catch(err) {
+    console.log("Error in the getAllAnimeList controller");
+    next(err);
+  }
+}
+
+
 
 // export const getAnimeDetailByMALId = async (req, res, next) => {
 //   try {

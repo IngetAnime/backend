@@ -69,11 +69,11 @@ model AnimeList {
   animeId    Int  @map("anime_id")
   platformId Int? @map("platform_id") // User selected platform
 
-  episodesDifference Int?       @map("episodes_difference") // Example: Bstation free user
   progress           Int?
   score              Int?
   startDate          DateTime?  @map("start_date")
   finishDate         DateTime?  @map("finish_date")
+  episodesDifference Int        @default(0) @map("episodes_difference") // Example: Bstation free user
   status             ListStatus @default(plan_to_watch)
   isSyncedWithMal    Boolean    @default(false)
   updatedAt          DateTime   @updatedAt @map("updated_at")
@@ -83,6 +83,7 @@ model AnimeList {
   platform Platform? @relation(fields: [platformId], references: [id])
 
   @@map("anime_list")
+  @@unique([userId, animeId])
 }
 
 model Anime {
@@ -111,7 +112,7 @@ model Platform {
   animeId Int @map("anime_id")
 
   name                String
-  link                String
+  link                String     @unique
   accessType          AccessType @map("access_type")
   nextEpisodeAiringAt DateTime   @map("next_episode_airing_at")
   lastEpisodeAiredAt  DateTime?  @map("last_episode_aired_at")

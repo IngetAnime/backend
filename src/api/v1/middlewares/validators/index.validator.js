@@ -119,7 +119,7 @@ export const manyAccessType = z
   )
 export const sortByPlatform = z
   .enum(["nextEpisodeAiringAt", "lastEpisodeAiredAt", "name", "animeId", "episodeAired"], {
-    errorMap: () => ({ message: "accessType must be one of: nextEpisodeAiringAt, lastEpisodeAiredAt, name, animeId, or episodeAired" })
+    errorMap: () => ({ message: "sortBy must be one of: nextEpisodeAiringAt, lastEpisodeAiredAt, name, animeId, or episodeAired" })
   })
 export const sortOrder = z
   .enum(["asc", "desc"], {
@@ -146,6 +146,25 @@ export const manyAnimeStatus = z
       message: "status must be one of: currently_airing, finished_airing, not_yet_aired or hiatus. If more than one, please seperate them by comma without any space",
     }
   )
+export const booleanB = z.boolean()
+export const booleanQ = z
+  .enum(["true", "false"], {
+    errorMap: () => ({ message: "boolena value, must be one of: true or false" })
+  })
+export const manyStatus = z
+  .string()
+  .transform((val) => val?.split(",").map((s) => s.trim()))
+  .refine(
+    (values) => values.every((value) => ["watching", "completed", "plan_to_watch", "on_hold", "dropped"].includes(value)),
+    {
+      message: "status must be one of: watching, completed, plan_to_watch, on_hold, or dropped. If more than one, please seperate them by comma without any space",
+    }
+  )
+export const sortByAnimeList = z
+  .enum(["title", "releaseAt", "updatedAt", "score", "progress"], {
+    errorMap: () => ({ message: "sortBy must be one of: title, releaseAt, updatedAt, score, or progress" })
+  })
+  
   
 export const validate = (schema, payload) => (req, res, next) => {
   try {
