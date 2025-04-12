@@ -9,7 +9,8 @@ export const createPlatform = validate(
     name: q, 
     link: link, 
     accessType: oneAccessType, 
-    releaseAt: dateTime, 
+    nextEpisodeAiringAt: dateTime,
+    lastEpisodeAiredAt: dateTime.optional(), 
     icon: link.optional(), 
     episodesAired: num_watched_episodes.optional()
   })
@@ -26,7 +27,8 @@ export const updatePlatrom = validate(
     name: q.optional(), 
     link: link.optional(), 
     accessType: oneAccessType.optional(), 
-    releaseAt: dateTime.optional(), 
+    nextEpisodeAiringAt: dateTime.optional(),
+    lastEpisodeAiredAt: dateTime.optional(), 
     icon: link.optional(), 
     episodesAired: num_watched_episodes.optional()
   })
@@ -37,9 +39,12 @@ export const getAllPlatforms = validate(
     animeId: id.optional(),
     name: q.optional(), 
     accessType: manyAccessType.optional(), 
-    episodesAired: id.optional(),
-    releaseAtStart: dateTime.optional(), 
-    releaseAtStart: dateTime.optional(), 
+    nextEpisodeAiringAtMinimum: dateTime.optional(),
+    nextEpisodeAiringAtMaximum: dateTime.optional(),
+    lastEpisodeAiredAtMinimum: dateTime.optional(), 
+    lastEpisodeAiredAtMaximum: dateTime.optional(), 
+    episodeAiredMinimum: id.optional(),
+    episodeAiredMaximum: id.optional(),
     sortBy: sortByPlatform.optional(),
     sortOrder: sortOrder.optional()
   })

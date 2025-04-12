@@ -118,8 +118,8 @@ export const manyAccessType = z
     }
   )
 export const sortByPlatform = z
-  .enum(["releaseAt", "name", "animeId", "episodesAired"], {
-    errorMap: () => ({ message: "accessType must be one of: releaseAt, name, animeId, or episodesAired" })
+  .enum(["nextEpisodeAiringAt", "lastEpisodeAiredAt", "name", "animeId", "episodeAired"], {
+    errorMap: () => ({ message: "accessType must be one of: nextEpisodeAiringAt, lastEpisodeAiredAt, name, animeId, or episodeAired" })
   })
 export const sortOrder = z
   .enum(["asc", "desc"], {

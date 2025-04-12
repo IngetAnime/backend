@@ -2,11 +2,14 @@ import prisma from "../utils/prisma.js";
 import customError from "../utils/customError.js";
 import dayjs from "dayjs";
 
-export const createPlatform = async (animeId, name, link, accessType, icon, releaseAt, episodeAired) => {
+export const createPlatform = async (
+  animeId, name, link, accessType, nextEpisodeAiringAt, lastEpisodeAiredAt, icon, episodeAired
+) => {
   try {
     const platform = await prisma.platform.create({
       data: {
-        animeId, name, link, accessType, releaseAt: dayjs(releaseAt).toISOString(),
+        animeId, name, link, accessType, nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString(),
+        ...(lastEpisodeAiredAt && { lastEpisodeAiredAt: dayjs(lastEpisodeAiredAt).toISOString() }),
         ...(icon && { icon }),
         ...(episodeAired && { episodeAired }),
       }, 
@@ -19,6 +22,8 @@ export const createPlatform = async (animeId, name, link, accessType, icon, rele
     console.log('Error in the createPlatform service', err);
     if (err.code === "P2003") {
       throw new customError("Anime not found", 404);
+    } else if (err.code === "P2002") {
+      throw new customError("Platform already exists", 409);
     }
     throw err;
   }
@@ -40,7 +45,7 @@ export const getPlatformDetail = async (platformId) => {
   }
 }
 
-export const updatePlatrom = async (platformId, name, link, accessType, icon, releaseAt, episodeAired) => {
+export const updatePlatrom = async (platformId, name, link, accessType, nextEpisodeAiringAt, lastEpisodeAiredAt, icon, episodeAired) => {
   try {
     const platform = await prisma.platform.update({
       where: { id: platformId },
@@ -48,8 +53,9 @@ export const updatePlatrom = async (platformId, name, link, accessType, icon, re
         ...(name && { name }),
         ...(link && { link }),
         ...(accessType && { accessType }),
+        ...(nextEpisodeAiringAt && { nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString() }),
+        ...(lastEpisodeAiredAt && { lastEpisodeAiredAt: dayjs(lastEpisodeAiredAt).toISOString() }),
         ...(icon && { icon }),
-        ...(releaseAt && { releaseAt: dayjs(releaseAt).toISOString() }),
         ...(episodeAired && { episodeAired }),
       }, 
       include: { 
@@ -61,6 +67,8 @@ export const updatePlatrom = async (platformId, name, link, accessType, icon, re
     console.log('Error in the updatePlatrom service', err);
     if (err.code === "P2025") {
       throw new customError("Platform not found", 404);
+    } else if (err.code === "P2002") {
+      throw new customError("Platform with this link already exists", 409);
     }
     throw err;
   }
@@ -85,7 +93,9 @@ export const deletePlatform = async (platformId) => {
 }
 
 export const getAllPlatforms = async (
-  animeId, name, accessType, episodeAired, releaseAtStart, releaseAtEnd, sortBy='releaseAt', sortOrder='asc'
+  animeId, name, accessType, 
+  nextEpisodeAiringAtMinimum, nextEpisodeAiringAtMaximum, lastEpisodeAiredAtMinimum, lastEpisodeAiredAtMaximum,
+  episodeAiredMinimum, episodeAiredMaximum, sortBy='nextEpisodeAiringAt', sortOrder='desc'
 ) => {
   try {
     accessType = accessType ? accessType.split(',') : [];
@@ -98,14 +108,29 @@ export const getAllPlatforms = async (
         ...(accessType?.length > 0 && {
           accessType: { in: accessType }
         }),
-        ...(episodeAired && {
-          episodesAired: { gte: episodeAired }
-        }),
-        ...(releaseAtStart || releaseAtEnd
+        ...(nextEpisodeAiringAtMinimum || nextEpisodeAiringAtMaximum
           ? {
-              releaseAt: {
-                ...(releaseAtStart && { gte: dayjs(releaseAtStart).toISOString() }),
-                ...(releaseAtEnd && { lte: dayjs(releaseAtEnd).toISOString() }),
+              nextEpisodeAiringAt: {
+                ...(nextEpisodeAiringAtMinimum && { gte: dayjs(nextEpisodeAiringAtMinimum).toISOString() }),
+                ...(nextEpisodeAiringAtMaximum && { lte: dayjs(nextEpisodeAiringAtMaximum).toISOString() }),
+              },
+            }
+          : {}
+        ),
+        ...(lastEpisodeAiredAtMinimum || lastEpisodeAiredAtMaximum
+          ? {
+              lastEpisodeAiredAt: {
+                ...(lastEpisodeAiredAtMinimum && { gte: dayjs(lastEpisodeAiredAtMinimum).toISOString() }),
+                ...(lastEpisodeAiredAtMaximum && { lte: dayjs(lastEpisodeAiredAtMaximum).toISOString() }),
+              },
+            }
+          : {}
+        ),
+        ...(episodeAiredMinimum || episodeAiredMaximum
+          ? {
+              episodeAired: {
+                ...(episodeAiredMinimum && { gte: episodeAiredMinimum }),
+                ...(episodeAiredMaximum && { lte: episodeAiredMaximum }),
               },
             }
           : {}
@@ -117,6 +142,9 @@ export const getAllPlatforms = async (
       include: { anime: true }
     })
 
+    if (!platform) {
+      throw new customError('Platform not found', 404);
+    }
     return { ...platform }
   } catch(err) {
     console.log('Error in the getAllPlatforms service', err);

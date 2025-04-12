@@ -2,8 +2,10 @@ import * as services from '../services/platform.service.js';
 
 export const createPlatform = async (req, res, next) => {
   try {
-    const { animeId, name, link, accessType, icon, releaseAt, episodesAired } = req.body;
-    const data = await services.createPlatform(animeId, name, link, accessType, icon, releaseAt, episodesAired);
+    const { animeId, name, link, accessType, nextEpisodeAiringAt, lastEpisodeAiredAt, icon, episodeAired } = req.body;
+    const data = await services.createPlatform(
+      animeId, name, link, accessType, nextEpisodeAiringAt, lastEpisodeAiredAt, icon, episodeAired
+    );
     res.status(201).json({ ...data });
   } catch(err) {
     console.log("Error in the createPlatform controller");
@@ -25,8 +27,10 @@ export const getPlatformDetail = async (req, res, next) => {
 export const updatePlatrom = async (req, res, next) => {
   try {
     const platformId = parseInt(req.params.platformId);
-    const { name, link, accessType, icon, releaseAt, episodesAired } = req.body;
-    const data = await services.updatePlatrom(platformId, name, link, accessType, icon, releaseAt, episodesAired);
+    const { name, link, accessType, nextEpisodeAiringAt, lastEpisodeAiredAt, icon, episodeAired } = req.body;
+    const data = await services.updatePlatrom(
+      platformId, name, link, accessType, nextEpisodeAiringAt, lastEpisodeAiredAt, icon, episodeAired
+    );
     res.status(200).json({ ...data });
   } catch(err) {
     console.log("Error in the updatePlatrom controller");
@@ -48,10 +52,14 @@ export const deletePlatform = async (req, res, next) => {
 export const getAllPlatforms = async (req, res, next) => {
   try {
     const { 
-      animeId, name, accessType, episodesAired, releaseAtStart, releaseAtEnd, sortBy, sortOrder
+      animeId, name, accessType, 
+      nextEpisodeAiringAtMinimum, nextEpisodeAiringAtMaximum, lastEpisodeAiredAtMinimum, lastEpisodeAiredAtMaximum,
+      episodeAiredMinimum, episodeAiredMaximum, sortBy, sortOrder
     } = req.query;
     const data = await services.getAllPlatforms(
-      animeId, name, accessType, episodesAired, releaseAtStart, releaseAtEnd, sortBy, sortOrder
+      parseInt(animeId), name, accessType, 
+      nextEpisodeAiringAtMinimum, nextEpisodeAiringAtMaximum, lastEpisodeAiredAtMinimum, lastEpisodeAiredAtMaximum,
+      parseInt(episodeAiredMinimum), parseInt(episodeAiredMaximum), sortBy, sortOrder
     );
     res.status(200).json({ ...data });
   } catch(err) {
