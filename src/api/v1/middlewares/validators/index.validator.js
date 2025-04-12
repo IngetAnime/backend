@@ -132,6 +132,21 @@ export const dateTime = z
     "Invalid datetime. Value must be ISO String format"
   )
 
+// Anime
+export const oneAnimeStatus = z
+  .enum(["currently_airing", "finished_airing", "not_yet_aired"], {
+    errorMap: () => ({ message: "status must be one of: currently_airing, finished_airing, or not_yet_aired" })
+  })
+export const manyAnimeStatus = z
+  .string()
+  .transform((val) => val?.split(",").map((s) => s.trim()))
+  .refine(
+    (values) => values.every((value) => ["currently_airing", "finished_airing", "not_yet_aired", "hiatus"].includes(value)),
+    {
+      message: "status must be one of: currently_airing, finished_airing, not_yet_aired or hiatus. If more than one, please seperate them by comma without any space",
+    }
+  )
+  
 export const validate = (schema, payload) => (req, res, next) => {
   try {
     switch (payload) {

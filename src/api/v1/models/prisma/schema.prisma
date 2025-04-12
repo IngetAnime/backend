@@ -93,6 +93,7 @@ model Anime {
   updateAt     DateTime    @updatedAt @map("updated_at")
   title        String
   picture      String
+  releaseAt    DateTime?   @map("release_at")
   episodeTotal Int         @default(0) @map("episode_total")
   isHitatus    Boolean     @default(false) @map("is_hiatus")
   status       AnimeStatus @default(not_yet_aired)
@@ -109,12 +110,13 @@ model Platform {
   id      Int @id @default(autoincrement())
   animeId Int @map("anime_id")
 
-  name         String
-  link         String
-  accessType   AccessType @map("access_type")
-  icon         String?
-  releaseAt    DateTime?  @map("release_at")
-  episodeAired Int        @default(0) @map("episode_aired")
+  name                String
+  link                String
+  accessType          AccessType @map("access_type")
+  nextEpisodeAiringAt DateTime   @map("next_episode_airing_at")
+  lastEpisodeAiredAt  DateTime?  @map("last_episode_aired_at")
+  icon                String?
+  episodeAired        Int        @default(0) @map("episode_aired")
 
   anime             Anime              @relation("AlternativePlatforms", fields: [animeId], references: [id], onDelete: Cascade)
   mainPlatform      Anime[]            @relation("MainPlatform")
