@@ -2,6 +2,8 @@ import prisma from "../utils/prisma.js";
 import customError from "../utils/customError.js";
 import dayjs from "dayjs";
 
+// CRUD Platform
+
 export const createPlatform = async (
   animeId, name, link, accessType, nextEpisodeAiringAt, lastEpisodeAiredAt, icon, episodeAired
 ) => {
@@ -151,20 +153,99 @@ export const getAllPlatforms = async (
     throw err;
   }
 }
-// console.log(( await createPlatform(1, 'Bstation', 'https://www.bilibili.tv/id/play/2124917', 'limited_time', undefined, '2025-04-11T01:28:00:000', 2)));
-// console.log(( await getPlatformDetail(1)));
-// console.log(( await updatePlatrom(1, undefined, undefined, 'limited_time')));
-// console.log(( await deletePlatform(1)));
 
-// https://www.bilibili.tv/id/play/2124917
-// 59160
+// CRUD Scheduler
+export const createOrUpdatePlatformSchedule = async (platformId, episodeNumber, updateOn) => {
+  try {
+    let schedule;
+    let statusCode = 200;
+    const schedulerBefore = await prisma.platformSchedule.findUnique({
+      where: {
+        platformId_episodeNumber: {
+          platformId, episodeNumber: episodeNumber - 1
+        }
+      }
+    })
+    const schedulerAfter = await prisma.platformSchedule.findUnique({
+      where: {
+        platformId_episodeNumber: {
+          platformId, episodeNumber: episodeNumber + 1
+        }
+      }
+    })
+    if (schedulerBefore &&  dayjs(schedulerBefore.updateOn).isAfter(updateOn)) {
+      throw new customError(
+        `Update date ${updateOn} cannot be earlier than the previous episode on ${schedulerBefore.updateOn}`, 400
+      )
+    } else if (schedulerAfter && dayjs(schedulerAfter.updateOn).isBefore(updateOn)) {
+      throw new customError(
+        `Update date ${updateOn} cannot be later than the next episode on ${schedulerAfter.updateOn}`, 400
+      )
+    } else if (!schedulerBefore && !schedulerAfter && episodeNumber !== 1) {
+      throw new customError('Previous or next episode schedule must exist', 400)
+    }
 
-// await prisma.anime.create({
-//   data: {
-//     malId: 58359,
-//     title: 'Isshun de Chiryou shiteita noni Yakutatazu to Tsuihou sareta Tensai Chiyushi, Yami Healer toshite Tanoshiku Ikiru',
-//     picture: "https://cdn.myanimelist.net/images/anime/1211/147335l.webp",
-//     episodeTotal: 12,
-//     status: 'currently_airing',
-//   }
-// })
+    try {
+      schedule = await prisma.platformSchedule.update({
+        where: { 
+          platformId_episodeNumber: {
+            platformId, episodeNumber
+          }
+        },
+        data: {
+          updateOn: dayjs(updateOn).toISOString(),
+        },
+        include: { 
+          platform: { 
+            include: { anime: true }
+          }
+        }
+      });
+    } catch(err) {
+      if (err.code === "P2025") {
+        statusCode = 201;
+        schedule = await prisma.platformSchedule.create({
+          data: { platformId, episodeNumber, updateOn },
+          include: { 
+            platform: { 
+              include: { anime: true }
+            }
+          }
+        });
+      } else {
+        throw err;
+      }
+    }
+
+    return { statusCode, ...schedule };
+  } catch(err) {
+    console.log('Error in the createOrUpdatePlatformSchedule service', err);
+    if (err.code === "P2003") {
+      throw new customError("Platform not found", 404);
+    }
+    throw err;
+  }
+}
+
+export const getPlatformSchedule = async (platformId) => {
+  try {
+    const schedule = await prisma.platformSchedule.findMany({
+      where: { platformId },
+      include: { 
+        platform: { 
+          include: { anime: true }
+        }
+      }
+    })
+    if (!schedule) {
+      throw new customError('Platform schedule not found', 404);
+    }
+    return { ...schedule }
+  } catch(err) {
+    console.log('Error in the getPlatformSchedule service', err);
+    throw err;
+  }
+}
+
+// console.log((await createOrUpdatePlatformSchedule(12, 3, '2025-04-20T08:30:00.000Z')))
+// console.log((await getPlatformSchedule(12)));

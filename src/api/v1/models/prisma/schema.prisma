@@ -82,8 +82,8 @@ model AnimeList {
   anime    Anime     @relation(fields: [animeId], references: [id], onDelete: Cascade)
   platform Platform? @relation(fields: [platformId], references: [id])
 
-  @@map("anime_list")
   @@unique([userId, animeId])
+  @@map("anime_list")
 }
 
 model Anime {
@@ -131,12 +131,13 @@ model AnimeSchedule {
   id      Int @id @default(autoincrement())
   animeId Int @map("anime_id")
 
+  status    AnimeStatus
   updateOn  DateTime    @map("update_on")
   isUpdated Boolean     @default(false) @map("is_updated")
-  status    AnimeStatus
 
   anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
 
+  @@unique([animeId, status])
   @@map("anime_schedules")
 }
 
@@ -144,11 +145,12 @@ model PlatformSchedule {
   id         Int @id @default(autoincrement())
   platformId Int @map("platform_id")
 
+  episodeNumber Int
   updateOn      DateTime @map("update_on")
   isUpdated     Boolean  @default(false) @map("is_updated")
-  episodeNumber Int
 
   platform Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
 
+  @@unique([platformId, episodeNumber])
   @@map("platform_schedules")
 }

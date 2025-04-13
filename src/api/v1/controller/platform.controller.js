@@ -67,3 +67,26 @@ export const getAllPlatforms = async (req, res, next) => {
     next(err);
   }
 }
+
+export const createOrUpdatePlatformSchedule = async (req, res, next) => {
+  try {
+    const platformId = parseInt(req.params.platformId);
+    const { episodeNumber, updateOn } = req.body
+    const { statusCode, ...data } = await services.createOrUpdatePlatformSchedule(platformId, episodeNumber, updateOn);
+    res.status(statusCode).json({ ...data });
+  } catch(err) {
+    console.log("Error in the createOrUpdatePlatformSchedule controller");
+    next(err);
+  }
+}
+
+export const getPlatformSchedule = async (req, res, next) => {
+  try {
+    const platformId = parseInt(req.params.platformId);
+    const data = await services.getPlatformSchedule(platformId);
+    res.status(200).json({ ...data });
+  } catch(err) {
+    console.log("Error in the getPlatformSchedule controller");
+    next(err);
+  }
+}

@@ -49,3 +49,10 @@ export const getAllPlatforms = validate(
     sortOrder: sortOrder.optional()
   })
 , 'query');
+
+export const createOrUpdatePlatformSchedule = validate(
+  z.object({
+    episodeNumber: num_watched_episodes, 
+    updateOn: dateTime
+  })
+, 'body')

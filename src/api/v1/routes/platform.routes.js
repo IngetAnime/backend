@@ -6,7 +6,19 @@ import { authMiddleware, authHandler, adminHandler } from "../middlewares/authHa
 const router = e.Router()
 
 router.post('/', authMiddleware, authHandler, adminHandler, validators.createPlatform, controllers.createPlatform);
+router.get(
+  '/:platformId/schedule', 
+  authMiddleware, authHandler, adminHandler, 
+  validators.getPlatformDetail,
+  controllers.getPlatformSchedule
+)
 router.get('/:platformId', validators.getPlatformDetail, controllers.getPlatformDetail);
+router.patch(
+  '/:platformId/schedule', 
+  authMiddleware, authHandler, adminHandler, 
+  validators.getPlatformDetail, validators.createOrUpdatePlatformSchedule,
+  controllers.createOrUpdatePlatformSchedule
+)
 router.patch(
   '/:platformId', 
   authMiddleware, authHandler, adminHandler,
