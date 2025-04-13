@@ -2,6 +2,11 @@ import prisma from "../utils/prisma.js";
 import customError from "../utils/customError.js";
 import { getAnimeDetails } from "../services/mal.service.js";
 import dayjs from "dayjs";
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // CRUD Database Anime
 
@@ -104,7 +109,10 @@ export const deleteAnime = async (animeId, malId) => {
   }
 }
 
-export const getAllAnime = async (title, releaseAtStart, releaseAtEnd, episodeTotalMinimum, episodeTotalMaximum, status) => {
+export const getAllAnime = async (
+  title, releaseAtStart, releaseAtEnd, episodeTotalMinimum, episodeTotalMaximum, status,
+  sortBy='title', sortOrder='asc'
+) => {
   try {
     status = status ? status.split(',') : [];
     const anime = await prisma.anime.findMany({
@@ -137,6 +145,9 @@ export const getAllAnime = async (title, releaseAtStart, releaseAtEnd, episodeTo
       ...(status?.includes('hiatus') && { 
         isHiatus: true 
       }),
+      orderBy: {
+        [sortBy]: sortOrder
+      },
       include: {
         mainPlatform: true,
       }
@@ -151,6 +162,97 @@ export const getAllAnime = async (title, releaseAtStart, releaseAtEnd, episodeTo
     throw err;
   }
 }
+
+export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakarta') => {
+  try {
+    const now = dayjs().toISOString();
+    const localDate = dayjs(now).tz(timeZone);
+    const startDate = localDate.subtract(3 * weekCount, 'day').startOf('day').toISOString();
+    const endDate = localDate.add(3 * weekCount, 'day').endOf('day').toISOString();
+
+    let anime = await prisma.anime.findMany({
+      where: {
+        platforms: {
+          some: { OR : [
+            { lastEpisodeAiredAt: { gte: startDate, lte: endDate } }, 
+            { nextEpisodeAiringAt: { gte: startDate, lte: endDate } }
+          ]},
+        }
+      },
+      include: {
+        mainPlatform: true, platforms: true, 
+        ...(userId && {
+          animeList: {
+            where: { userId },
+            include: { platform: true }
+          }
+        })
+      },
+    });
+
+    // Filter main platform (between user selected platform and default platform)
+    anime = anime.map((animes) => {
+      let { mainPlatform, animeList, ...anime } = animes
+      let platform;
+      if (animeList[0]?.platform) { // If user anime list has platform
+        platform = animeList[0].platform
+      } else { // If not, use default main platform
+        platform = mainPlatform
+      }
+
+      delete animeList[0]?.platform; // Delete because already moved to let platform
+
+      return {
+        ...anime,
+        selectedPlatform: platform,
+        myListStatus: animeList[0] || null,
+      }
+    });
+
+    let timelineBeforeToday = anime
+      .filter((value) => {
+        const airedAt = value.selectedPlatform?.lastEpisodeAiredAt;
+        return airedAt ? (dayjs(airedAt).isBefore(dayjs()) && dayjs(airedAt).isAfter(startDate)) : false;
+      })
+      .sort((a, b) => a.selectedPlatform.lastEpisodeAiredAt - b.selectedPlatform.lastEpisodeAiredAt)
+      .map(value => {
+        const episodesDifference = value.myListStatus?.episodesDifference || 0
+        return { 
+          schedule: {
+            dateTime: value.selectedPlatform.lastEpisodeAiredAt,
+            numEpisode: value.selectedPlatform.episodeAired + episodesDifference,
+          },
+          ...value 
+        };
+      })
+
+    let timelineAfterToday = anime
+      .filter((value) => {
+        const airedAt = value.selectedPlatform?.nextEpisodeAiringAt;
+        return airedAt ? (dayjs(airedAt).isAfter(dayjs()) && dayjs(airedAt).isBefore(endDate) ) : false;
+      })
+      .sort((a, b) => a.selectedPlatform.nextEpisodeAiringAt - b.selectedPlatform.nextEpisodeAiringAt)
+      .map(value => {
+        const episodesDifference = value.myListStatus?.episodesDifference || 0
+        return { 
+          schedule: {
+            dateTime: value.selectedPlatform.nextEpisodeAiringAt,
+            numEpisode: value.selectedPlatform.episodeAired + episodesDifference + 1,
+          },
+          ...value 
+        };
+      })
+
+    // return { ...timelineBeforeToday, ...timelineAfterToday }
+    const timeline = timelineBeforeToday.concat(timelineAfterToday)
+    return { ...timeline }
+  } catch(err) {
+    console.log('Error in the getAnimeTimeline service', err);
+    throw err;
+  }
+}
+
+// console.log((await getAnimeTimeline(21, 2)));
 
 // CRUD User Anime List
 

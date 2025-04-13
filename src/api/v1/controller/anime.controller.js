@@ -58,6 +58,18 @@ export const getAllAnime = async (req, res, next) => {
   }
 }
 
+export const getAnimeTimeline = async (req, res, next) => {
+  try {
+    const userId = req.user ? req.user.id : undefined;
+    const { weekCount, timeZone } = req.query;
+    const data = await services.getAnimeTimeline(userId, weekCount, timeZone);
+    res.status(200).json({ ...data });
+  } catch(err) {
+    console.log("Error in the getAnimeTimeline controller");
+    next(err);
+  }
+}
+
 export const createOrUpdateAnimeList = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id)

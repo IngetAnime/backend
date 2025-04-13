@@ -1,6 +1,13 @@
 import { z } from "zod";
 import customError from '../../utils/customError.js';
 
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 // Authentication
 export const email = z.string().email().nonempty()
 export const password = z
@@ -160,10 +167,27 @@ export const manyStatus = z
       message: "status must be one of: watching, completed, plan_to_watch, on_hold, or dropped. If more than one, please seperate them by comma without any space",
     }
   )
+export const sortByAnime = z
+  .enum(["title", "releaseAt", "updatedAt", "episodeTotal", "malId"], {
+    errorMap: () => ({ message: "sortBy must be one of: title, releaseAt, updatedAt, episodeTotal, or malId" })
+  })
 export const sortByAnimeList = z
   .enum(["title", "releaseAt", "updatedAt", "score", "progress"], {
     errorMap: () => ({ message: "sortBy must be one of: title, releaseAt, updatedAt, score, or progress" })
   })
+export const timeZone = z
+  .string()
+  .min(1, 'Invalid time zone')
+  .refine(
+    timeZone => {
+      try {
+        return dayjs().tz(timeZone).isValid();
+      } catch(err) {
+        return false;
+      }
+    }, 
+    { message: "Invalid time zone", }
+  )
   
   
 export const validate = (schema, payload) => (req, res, next) => {

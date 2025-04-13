@@ -4,7 +4,9 @@ import {
   manyStatus,
   booleanQ,
   sortOrder,
-  sortByAnimeList
+  sortByAnimeList,
+  sortByAnime,
+  timeZone
 } from './index.validator.js';
 
 export const createAnime = validate(
@@ -48,7 +50,16 @@ export const getAllAnime = validate(
     releaseAtEnd: dateTime.optional(),
     episodeTotalMinimum: id.optional(),
     episodeTotalMaximum: id.optional(),
-    status: manyAnimeStatus.optional()
+    status: manyAnimeStatus.optional(),
+    sortBy: sortByAnime.optional(),
+    sortOrder: sortOrder.optional()
+  })
+, 'query')
+
+export const getAnimeTimeline = validate(
+  z.object({
+    weekCount: id.optional(),
+    timeZone: timeZone.optional(),
   })
 , 'query')
 
