@@ -406,6 +406,75 @@ export const getAllAnimeList = async (
   }
 }
 
+// CRUD Anime Schedule
+
+// CRUD Scheduler
+export const createOrUpdateAnimeSchedule = async (animeId, status, updateOn) => {
+  try {
+    let schedule;
+    let statusCode = 200;
+    try {
+      schedule = await prisma.animeSchedule.update({
+        where: { 
+          animeId_status: {
+            animeId, status
+          }
+        },
+        data: {
+          updateOn: dayjs(updateOn).toISOString(),
+        },
+        include: {
+          anime: { 
+            include: { mainPlatform: true }
+          }
+        }
+      });
+    } catch(err) {
+      if (err.code === "P2025") {
+        statusCode = 201;
+        schedule = await prisma.animeSchedule.create({
+          data: { animeId, status, updateOn: dayjs(updateOn).toISOString() },
+          include: { 
+            anime: { 
+              include: { mainPlatform: true }
+            }
+          }
+        });
+      } else {
+        throw err;
+      }
+    }
+
+    return { statusCode, ...schedule };
+  } catch(err) {
+    console.log('Error in the createOrUpdateAnimeSchedule service', err);
+    if (err.code === "P2003") {
+      throw new customError("Anime not found", 404);
+    }
+    throw err;
+  }
+}
+
+export const getAnimeSchedule = async (animeId) => {
+  try {
+    const schedule = await prisma.animeSchedule.findMany({
+      where: { animeId },
+      include: { 
+        anime: { 
+          include: { mainPlatform: true }
+        }
+      }
+    })
+    if (!schedule) {
+      throw new customError('Anime schedule not found', 404);
+    }
+    return { ...schedule }
+  } catch(err) {
+    console.log('Error in the getAnimeSchedule service', err);
+    throw err;
+  }
+}
+
 // console.log((await createOrUpdateAnimeList(21, 1, 3, 0, 4, 8, dayjs(), undefined, 'watching')));
 // console.log((await getAnimeListDetail(2)));
 // console.log((await deleteAnimeList(2)));

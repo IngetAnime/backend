@@ -6,6 +6,12 @@ import { authMiddleware, authHandler, adminHandler, optAuthMiddleware } from "..
 const router = e.Router()
 
 router.post('/', authMiddleware, authHandler, adminHandler, validators.createAnime, controllers.createAnime);
+router.get(
+  '/:animeId/schedule', 
+  authMiddleware, authHandler, adminHandler, 
+  validators.animeId,
+  controllers.getAnimeSchedule
+)
 router.get('/my-list-status', authMiddleware, authHandler, validators.getAllAnimeList, controllers.getAllAnimeList);
 router.get('/timeline', optAuthMiddleware, validators.getAnimeTimeline, controllers.getAnimeTimeline);
 router.get('/:animeId/my-list-status', authMiddleware, authHandler, validators.animeId, controllers.getAnimeListDetail);
@@ -15,6 +21,12 @@ router.patch(
   authMiddleware, authHandler, 
   validators.animeId, validators.createOrUpdateAnimeList,
   controllers.createOrUpdateAnimeList
+)
+router.patch(
+  '/:animeId/schedule', 
+  authMiddleware, authHandler, adminHandler, 
+  validators.animeId, validators.createOrUpdateAnimeSchedule,
+  controllers.createOrUpdateAnimeSchedule
 )
 router.patch(
   '/:animeId', 
