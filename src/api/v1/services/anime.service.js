@@ -1,6 +1,6 @@
 import prisma from "../utils/prisma.js";
 import customError from "../utils/customError.js";
-import { getAnimeDetails } from "../services/mal.service.js";
+import { getAnimeDetails, updateMyAnimeListStatus } from "../services/mal.service.js";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
@@ -262,11 +262,13 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
 // CRUD User Anime List
 
 export const createOrUpdateAnimeList = async (
-  userId, animeId, platformId, episodesDifference, progress, score, startDate, finishDate, status, isSyncedWithMal
+  userId, animeId, platformId, episodesDifference, progress, score, startDate, finishDate, status, isSyncedWithMal, timeZone='Asia/Jakarta'
 ) => {
   try {
     let animeList;
     let statusCode = 200;
+    startDate = startDate ? dayjs(startDate).tz(timeZone) : startDate
+    finishDate = finishDate ? dayjs(finishDate).tz(timeZone) : finishDate
     try {
       animeList = await prisma.animeList.update({
         where: { 
@@ -274,13 +276,23 @@ export const createOrUpdateAnimeList = async (
         },
         data: {
           ...(platformId && { platformId }),
-          ...(episodesDifference && { episodesDifference }),
-          ...(progress && { progress }),
-          ...(score && { score }),
-          ...(startDate && { startDate: dayjs(startDate).toISOString() }),
-          ...(finishDate && { finishDate: dayjs(finishDate).toISOString() }),
+          ...((episodesDifference === 0 || episodesDifference) && { episodesDifference }),
+          ...((progress === 0 || progress) && { progress }),
+          ...((score === 0 || score) && { score }),
+          ...(
+            startDate === null ? { startDate: null } : 
+            startDate ? { startDate: dayjs(startDate).toISOString() } : {}
+          ),
+          ...(
+            finishDate === null ? { finishDate: null } : 
+            finishDate ? { finishDate: dayjs(finishDate).toISOString() } : {}
+          ),
           ...(status && { status }),
           ...(isSyncedWithMal && { isSyncedWithMal }),
+          ...(
+            isSyncedWithMal ? { isSyncedWithMal: true } : 
+            isSyncedWithMal === false ? { isSyncedWithMal: false } : {}
+          ),
         },
         include: {
           anime: true, platform: true
@@ -299,7 +311,9 @@ export const createOrUpdateAnimeList = async (
             ...(startDate && { startDate: dayjs(startDate).toISOString() }),
             ...(finishDate && { finishDate: dayjs(finishDate).toISOString() }),
             ...(status && { status }),
-            ...(isSyncedWithMal && { isSyncedWithMal }),
+            ...(isSyncedWithMal ? 
+              { isSyncedWithMal: true } : 
+              { isSyncedWithMal: false }),
           },
           include: {
             anime: true, platform: true
@@ -310,6 +324,13 @@ export const createOrUpdateAnimeList = async (
       }
     }
 
+    if (animeList.isSyncedWithMal) {
+      startDate = animeList.startDate ? dayjs(animeList.startDate).format('YYYY-MM-DD') : animeList.startDate;
+      finishDate = animeList.finishDate ? dayjs(animeList.finishDate).format('YYYY-MM-DD') : animeList.finishDate;
+      await updateMyAnimeListStatus(
+        animeList.userId, animeList.anime.malId, animeList.status, animeList.score, animeList.progress, startDate, finishDate
+      )
+    }
     return { ...animeList, statusCode };
   } catch(err) {
     console.log('Error in the createOrUpdateAnimeList service', err);

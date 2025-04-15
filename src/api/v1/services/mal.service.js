@@ -282,11 +282,21 @@ export const updateMyAnimeListStatus = async (
     const url = `https://api.myanimelist.net/v2/anime/${anime_id}/my_list_status`;
     const params = new URLSearchParams({ 
       ...(status && { status }),
-      ...(score && { score }),
-      ...(num_watched_episodes && { num_watched_episodes }),
-      ...(start_date && { start_date }),
-      ...(finish_date && { finish_date }),
-      
+      ...((num_watched_episodes === 0 || num_watched_episodes) && { num_watched_episodes }),
+      ...((score === 0 || score) && { score }),
+      ...(
+        start_date === null ? { start_date: '0000-00-00' } : 
+        start_date ? { start_date } : {}
+      ),
+      ...(
+        finish_date === null ? { finish_date: '0000-00-00' } : 
+        finish_date ? { finish_date } : {}
+      ),
+
+      // ...(score && { score }),
+      // ...(num_watched_episodes && { num_watched_episodes }),
+      // ...(start_date && { start_date }),
+      // ...(finish_date && { finish_date }),
     });
     const response = await fetch(url, {
       method: 'PATCH',

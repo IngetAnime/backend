@@ -76,9 +76,11 @@ export const createOrUpdateAnimeList = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id)
     const animeId = parseInt(req.params.animeId);
-    const { platformId, episodesDifference, progress, score, startDate, finishDate, status, isSyncedWithMal } = req.body;
+    const { 
+      platformId, episodesDifference, progress, score, startDate, finishDate, status, isSyncedWithMal, timeZone
+    } = req.body;
     const { statusCode, ...data} = await services.createOrUpdateAnimeList(
-      userId, animeId, platformId, episodesDifference, progress, score, startDate, finishDate, status, isSyncedWithMal
+      userId, animeId, platformId, episodesDifference, progress, score, startDate, finishDate, status, isSyncedWithMal, timeZone
     );
     res.status(statusCode).json({ ...data });
   } catch(err) {
