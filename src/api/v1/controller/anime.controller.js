@@ -124,31 +124,6 @@ export const getAllAnimeList = async (req, res, next) => {
   }
 }
 
-export const createOrUpdateAnimeSchedule = async (req, res, next) => {
-  try {
-    const animeId = parseInt(req.params.animeId);
-    const { status, updateOn } = req.body
-    const { statusCode, ...data } = await services.createOrUpdateAnimeSchedule(animeId, status, updateOn);
-    res.status(statusCode).json({ ...data });
-  } catch(err) {
-    console.log("Error in the createOrUpdateAnimeSchedule controller");
-    next(err);
-  }
-}
-
-export const getAnimeSchedule = async (req, res, next) => {
-  try {
-    const animeId = parseInt(req.params.animeId);
-    const data = await services.getAnimeSchedule(animeId);
-    res.status(200).json({ ...data });
-  } catch(err) {
-    console.log("Error in the getAnimeSchedule controller");
-    next(err);
-  }
-}
-
-
-
 // export const getAnimeDetailByMALId = async (req, res, next) => {
 //   try {
 //     const malId = parseInt(req.query.malId);

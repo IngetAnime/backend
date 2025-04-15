@@ -86,10 +86,3 @@ export const getAllAnimeList = validate(
     sortOrder: sortOrder.optional()
   })
 , 'query')
-
-export const createOrUpdateAnimeSchedule = validate(
-  z.object({
-    status: oneAnimeStatus, 
-    updateOn: dateTime
-  })
-, 'body')
