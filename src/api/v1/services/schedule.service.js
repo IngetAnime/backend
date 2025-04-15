@@ -55,7 +55,7 @@ export const createOrUpdatePlatformSchedule = async (platformId, episodeNumber, 
       if (err.code === "P2025") {
         statusCode = 201;
         schedule = await prisma.platformSchedule.create({
-          data: { platformId, episodeNumber, updateOn },
+          data: { platformId, episodeNumber, updateOn: dayjs(updateOn).toISOString() },
           include: { 
             platform: { 
               include: { anime: true }
@@ -64,6 +64,16 @@ export const createOrUpdatePlatformSchedule = async (platformId, episodeNumber, 
         });
       } else {
         throw err;
+      }
+    }
+
+    if (schedule.platformId === schedule.platform.anime.platformId) { // Current platform same as anime main platform
+      if (schedule.episodeNumber === 1) { 
+        // If first episode, create currently_airing anime schedule
+        await createOrUpdateAnimeSchedule(schedule.platform.animeId, 'currently_airing', schedule.updateOn)
+      } else if(schedule.episodeNumber === schedule.platform.anime.episodeTotal) { 
+        // If last episode, create finished_airing anime schedule
+        await createOrUpdateAnimeSchedule(schedule.platform.animeId, 'finished_airing', schedule.updateOn)
       }
     }
 
