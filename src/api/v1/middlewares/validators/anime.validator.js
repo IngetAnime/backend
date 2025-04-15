@@ -12,8 +12,10 @@ import {
 export const createAnime = validate(
   z.object({
     malId: num_watched_episodes,
-    title: q.optional(),
     picture: link.optional(),
+    title: q.optional(),
+    titleEN: q.optional(),
+    titleID: q.optional(),
     releaseAt: dateTime.optional(),
     episodeTotal: num_watched_episodes.optional(),
     status: oneAnimeStatus.optional()
@@ -34,8 +36,10 @@ export const malId = validate(
 
 export const updateAnime = validate(
   z.object({
-    title: q.optional(),
     picture: link.optional(),
+    title: q.optional(),
+    titleID: q.optional(),
+    titleEN: q.optional(),
     releaseAt: dateTime.optional(),
     episodeTotal: num_watched_episodes.optional(),
     status: oneAnimeStatus.optional(),

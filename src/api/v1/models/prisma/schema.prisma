@@ -92,8 +92,10 @@ model Anime {
 
   malId        Int         @unique @map("mal_id")
   updateAt     DateTime    @updatedAt @map("updated_at")
-  title        String
   picture      String
+  title        String
+  titleID      String?     @map("title_id")
+  titleEN      String?     @map("title_en")
   releaseAt    DateTime?   @map("release_at")
   episodeTotal Int         @default(0) @map("episode_total")
   isHitatus    Boolean     @default(false) @map("is_hiatus")

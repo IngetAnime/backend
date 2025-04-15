@@ -10,19 +10,22 @@ dayjs.extend(timezone);
 
 // CRUD Database Anime
 
-export const createAnime = async (malId, title, picture, releaseAt, episodeTotal, status) => {
+export const createAnime = async (malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status) => {
   try {
     // Get data from MyAnimeList
-    const animeFromMAL = await getAnimeDetails(undefined, malId, 'start_date,num_episodes,status');
-    title = title || animeFromMAL.title || undefined;
+    const animeFromMAL = await getAnimeDetails(undefined, malId, 'start_date,num_episodes,status,alternative_titles');
     picture = picture || animeFromMAL.main_picture?.large || undefined;
+    title = title || animeFromMAL.title || undefined;
+    titleEN = titleEN || animeFromMAL.alternative_titles.en || undefined;
     releaseAt = releaseAt || dayjs(animeFromMAL.start_date).add(7, 'hour') || undefined;
     episodeTotal = episodeTotal || animeFromMAL.num_episodes || undefined;
     status = status || animeFromMAL.status || undefined;
 
     const anime = await prisma.anime.create({
       data: {
-        malId, title, picture,
+        malId, picture, title,
+        ...(titleID && { titleID }),
+        ...(titleEN && { titleEN }),
         ...(releaseAt && { releaseAt: dayjs(releaseAt).toISOString() }),
         ...(episodeTotal && { episodeTotal }),
         ...(status && { status }),
@@ -58,15 +61,17 @@ export const getAnimeDetailById = async (animeId, malId) => {
   }
 }
 
-export const updateAnime = async (animeId, malId, title, picture, releaseAt, episodeTotal, status, platformId) => {
+export const updateAnime = async (animeId, malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status, platformId) => {
   try {
     const anime = await prisma.anime.update({
       where: {
         ...(animeId ? { id: animeId } : { malId })
       }, 
       data: {
-        ...(title && { title }),
         ...(picture && { picture }),
+        ...(title && { title }),
+        ...(titleID && { titleID }),
+        ...(titleEN && { titleEN }),
         ...(releaseAt && { releaseAt: dayjs(releaseAt).toISOString() }),
         ...(episodeTotal && { episodeTotal }),
         ...(status && { status }),

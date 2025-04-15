@@ -2,8 +2,8 @@ import * as services from '../services/anime.service.js';
 
 export const createAnime = async (req, res, next) => {
   try {
-    const { malId, title, picture, releaseAt, episodeTotal, status } = req.body;
-    const data = await services.createAnime(malId, title, picture, releaseAt, episodeTotal, status);
+    const { malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status } = req.body;
+    const data = await services.createAnime(malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status);
     res.status(201).json({ ...data });
   } catch(err) {
     console.log("Error in the createAnime controller");
@@ -25,8 +25,10 @@ export const getAnimeDetailByAnimeId = async (req, res, next) => {
 export const updateAnimeByAnimeId = async (req, res, next) => {
   try {
     const animeId = parseInt(req.params.animeId);
-    const { title, picture, releaseAt, episodeTotal, status, platformId } = req.body;
-    const data = await services.updateAnime(animeId, undefined, title, picture, releaseAt, episodeTotal, status, platformId);
+    const { picture, title, titleID, titleEN, releaseAt, episodeTotal, status, platformId } = req.body;
+    const data = await services.updateAnime(
+      animeId, undefined, picture, title, titleID, titleEN, releaseAt, episodeTotal, status, platformId
+    );
     res.status(200).json({ ...data });
   } catch(err) {
     console.log("Error in the updateAnimeByAnimeId controller");
