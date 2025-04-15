@@ -63,8 +63,8 @@ export const updateMyAnimeListStatus = validate(
     status: status.optional(),
     score: score.optional(),
     num_watched_episodes: num_watched_episodes.optional(),
-    start_date: date.optional(),
-    finish_date: date.optional(),
+    start_date: date.nullable().optional(),
+    finish_date: date.nullable().optional(),
   })
 , 'body')
 

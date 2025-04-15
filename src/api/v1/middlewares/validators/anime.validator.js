@@ -72,7 +72,7 @@ export const createOrUpdateAnimeList = validate(
     platformId: num_watched_episodes.optional(),
     episodesDifference: num_watched_episodes.optional(), 
     progress: num_watched_episodes.optional(), 
-    score: num_watched_episodes.optional(), 
+    score: score.optional(), 
     startDate: date.nullable().optional(), 
     finishDate: date.nullable().optional(), 
     status: status.optional(), 
