@@ -64,10 +64,10 @@ model User {
 }
 
 model AnimeList {
-  id         Int  @id @default(autoincrement())
-  userId     Int  @map("user_id")
-  animeId    Int  @map("anime_id")
-  platformId Int? @map("platform_id") // User selected platform
+  id              Int  @id @default(autoincrement())
+  userId          Int  @map("user_id")
+  animeId         Int  @map("anime_id")
+  animePlatformId Int? @map("anime_platform_id") // User selected platform
 
   progress           Int?
   score              Int?
@@ -78,17 +78,16 @@ model AnimeList {
   isSyncedWithMal    Boolean    @default(false)
   updatedAt          DateTime   @updatedAt @map("updated_at")
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  anime    Anime     @relation(fields: [animeId], references: [id], onDelete: Cascade)
-  platform Platform? @relation(fields: [platformId], references: [id])
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anime    Anime          @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  platform AnimePlatform? @relation(fields: [animePlatformId], references: [id])
 
   @@unique([userId, animeId])
   @@map("anime_list")
 }
 
 model Anime {
-  id         Int  @id @default(autoincrement())
-  platformId Int? @map("platform_id") // Main anime platforms
+  id Int @id @default(autoincrement())
 
   malId        Int         @unique @map("mal_id")
   updateAt     DateTime    @updatedAt @map("updated_at")
@@ -101,30 +100,42 @@ model Anime {
   isHitatus    Boolean     @default(false) @map("is_hiatus")
   status       AnimeStatus @default(not_yet_aired)
 
-  platforms      Platform[]      @relation("AlternativePlatforms")
-  mainPlatform   Platform?       @relation("MainPlatform", fields: [platformId], references: [id])
+  platforms      AnimePlatform[]
   animeList      AnimeList[]
   animeSchedules AnimeSchedule[]
 
   @@map("anime")
 }
 
-model Platform {
-  id      Int @id @default(autoincrement())
-  animeId Int @map("anime_id")
+model AnimePlatform {
+  id         Int @id @default(autoincrement())
+  animeId    Int @map("anime_id")
+  platformId Int @map("anime_platform_id")
 
   name                String
+  icon                String?
   link                String     @unique
   accessType          AccessType @map("access_type")
   nextEpisodeAiringAt DateTime   @map("next_episode_airing_at")
   lastEpisodeAiredAt  DateTime?  @map("last_episode_aired_at")
-  icon                String?
+  intervalInDays      Int        @default(7) @map("interval_in_days")
   episodeAired        Int        @default(0) @map("episode_aired")
+  isMainPlatform      Boolean    @default(false) @map("is_main_platform")
 
-  anime             Anime              @relation("AlternativePlatforms", fields: [animeId], references: [id], onDelete: Cascade)
-  mainPlatform      Anime[]            @relation("MainPlatform")
-  animeList         AnimeList[]
-  platformSchedules PlatformSchedule[]
+  anime     Anime       @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  platform  Platform    @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  animeList AnimeList[]
+
+  @@unique([platformId, animeId])
+  @@map("anime_platform")
+}
+
+model Platform {
+  id   Int    @id @default(autoincrement())
+  name String
+  icon String
+
+  animePlatform AnimePlatform[]
 
   @@map("platforms")
 }
@@ -141,18 +152,4 @@ model AnimeSchedule {
 
   @@unique([animeId, status])
   @@map("anime_schedules")
-}
-
-model PlatformSchedule {
-  id         Int @id @default(autoincrement())
-  platformId Int @map("platform_id")
-
-  episodeNumber Int
-  updateOn      DateTime @map("update_on")
-  isUpdated     Boolean  @default(false) @map("is_updated")
-
-  platform Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
-
-  @@unique([platformId, episodeNumber])
-  @@map("platform_schedules")
 }

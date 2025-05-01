@@ -16,6 +16,7 @@ const getUserData = (user) => {
     email: user.email, 
     username: user.username, 
     isVerified: user.isVerifed, 
+    role: user.role,
     ...(user.picture && { picture: user.picture }),
     token 
   };
