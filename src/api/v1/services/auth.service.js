@@ -16,7 +16,6 @@ const getUserData = (user) => {
     email: user.email, 
     username: user.username, 
     isVerified: user.isVerifed, 
-    role: user.role,
     ...(user.picture && { picture: user.picture }),
     token 
   };
@@ -318,11 +317,18 @@ export const loginWithMAL = async (code) => {
   }
 }
 
+export const isAuthenticated = async (id) => {
+  try {
+    let user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new customError('User not found', 400)
+    }
+    user = getUserData(user);
+    delete user.token;
 
-
-// console.log(await register('ahmadsubhandaryhadi@gmail.com', '12341234', 'ahmadsubhand'))
-// console.log(await resendEmailVerification(16))
-// console.log(await verifyEmail(16, 'ahmadsubhandaryhadi@gmail.com', '801853'))
-// console.log(await login('ahmadsubhandaryhadi@gmail.com', '12341234'))
-// console.log(await forgotPassword('ahmadsubhandaryhadi@gmail.com'))
-// console.log(await resetPassword(16, 'ahmadsubhandaryhadi@gmail.com', '091616', '12341234'))
+    return { ...user };
+  } catch(err) {
+    console.log("Error in the isAuthenticated service", err);
+    throw err;
+  }
+}

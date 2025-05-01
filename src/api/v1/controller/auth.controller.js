@@ -122,3 +122,24 @@ export const loginWithMAL = async (req, res, next) => {
     next(err);
   }
 }
+
+export const isAuthenticated = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const data = await services.isAuthenticated(id);
+    res.status(200).json({ ...data });
+  } catch(err) {
+    console.log("Error in the isAuthenticated controller");
+    next(err);
+  }
+}
+
+export const isAdmin = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    res.status(200).json({ id });
+  } catch(err) {
+    console.log("Error in the isAdmin controller");
+    next(err);
+  }
+}

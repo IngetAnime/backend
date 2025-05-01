@@ -1,7 +1,7 @@
 import e from "express";
 import * as controllers from '../controller/auth.controller.js';
 import * as validators from '../middlewares/validators/auth.validator.js';
-import { authHandler, authMiddleware, emailVerificationhHandler, resetPasswordHandler } from "../middlewares/authHandler.js";
+import { adminHandler, authHandler, authMiddleware, emailVerificationhHandler, resetPasswordHandler } from "../middlewares/authHandler.js";
 
 const router = e.Router();
 
@@ -14,5 +14,7 @@ router.post('/forgot-password', validators.forgotPassword, controllers.forgotPas
 router.post('/reset-password', authMiddleware, resetPasswordHandler, validators.resetPassword, controllers.resetPassword);
 router.post('/google', validators.codeValidator, controllers.loginWithGoogle);
 router.post('/mal', validators.codeValidator, controllers.loginWithMAL);
+router.get('/me', authMiddleware, authHandler, controllers.isAuthenticated);
+router.get('/is-admin', authMiddleware, authHandler, adminHandler, controllers.isAdmin);
 
 export default router;
