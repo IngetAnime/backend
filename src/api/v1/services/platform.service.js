@@ -2,28 +2,51 @@ import prisma from "../utils/prisma.js";
 import customError from "../utils/customError.js";
 import dayjs from "dayjs";
 
-// CRUD Platform
+// CRUD Basic Platform
 
-export const createPlatform = async (
-  animeId, name, link, accessType, nextEpisodeAiringAt, lastEpisodeAiredAt, icon, episodeAired
-) => {
+export const createPlatform = async (name) => {
   try {
     const platform = await prisma.platform.create({
+      data: { name }
+    })
+    return { ...platform }
+  } catch(err) {
+    console.log('Error in the createPlatform service');
+    if (err.code === "P2002") {
+      throw new customError("Platform already exists", 409);
+    }
+    throw err;
+  }
+}
+
+export const getPlatformDetail = async (id) => {
+  try {
+    const platform = await prisma.platform.findUnique({
+      where: { id }
+    })
+    if (!platform) {
+      throw new customError("Platform not found", 404);
+    }
+    return { ...platform }
+  } catch(err) {
+    console.log('Error in the getPlatformDetail service');
+    throw err;
+  }
+}
+
+export const updatePlatform = async (id, name) => {
+  try {
+    const platform = await prisma.platform.update({
+      where: { id },
       data: {
-        animeId, name, link, accessType, nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString(),
-        ...(lastEpisodeAiredAt && { lastEpisodeAiredAt: dayjs(lastEpisodeAiredAt).toISOString() }),
-        ...(icon && { icon }),
-        ...(episodeAired && { episodeAired }),
-      }, 
-      include: { 
-        anime: true 
+        ...(name && { name })
       }
     })
     return { ...platform }
   } catch(err) {
-    console.log('Error in the createPlatform service', err);
-    if (err.code === "P2003") {
-      throw new customError("Anime not found", 404);
+    console.log('Error in the updatePlatform service');
+    if (err.code === "P2025") {
+      throw new customError("Platform not found", 404);
     } else if (err.code === "P2002") {
       throw new customError("Platform already exists", 409);
     }
@@ -31,128 +54,200 @@ export const createPlatform = async (
   }
 }
 
-export const getPlatformDetail = async (platformId) => {
+export const deletePlatform = async (id) => {
   try {
-    const platform = await prisma.platform.findUnique({
-      where: { id: platformId },
-      include: { anime: true }
+    const platform = await prisma.platform.delete({
+      where: { id }
     })
-    if (!platform) {
-      throw new customError('Platform not found', 404);
-    }
     return { ...platform }
   } catch(err) {
-    console.log('Error in the getPlatformDetail service', err);
+    console.log('Error in the deletePlatform service');
+    if (err.code === "P2025") {
+      throw new customError("Platform not found", 404);
+    }
     throw err;
   }
 }
 
-export const updatePlatrom = async (platformId, name, link, accessType, nextEpisodeAiringAt, lastEpisodeAiredAt, icon, episodeAired) => {
+export const getPlatforms = async () => {
   try {
-    const platform = await prisma.platform.update({
-      where: { id: platformId },
+    const platforms = await prisma.platform.findMany()
+    return { ...platforms }
+  } catch(err) {
+    console.log('Error in the getPlatforms service');
+    throw err;
+  }
+}
+
+// CRUD Anime Platform
+
+const setUpMainPlatform = async (animeId) => {
+  await prisma.animePlatform.updateMany({
+    where: { animeId },
+    data: { isMainPlatform: false }
+  })
+}
+
+export const createAnimePlatform = async (
+  animeId, platformId, link, accessType, nextEpisodeAiringAt, 
+  lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform
+) => {
+  try {
+    if (isMainPlatform) {
+      await setUpMainPlatform(animeId)
+    }
+    const animePlatform = await prisma.animePlatform.create({
       data: {
-        ...(name && { name }),
+        animeId, platformId, link, accessType, nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString(),
+        ...(lastEpisodeAiredAt && { lastEpisodeAiredAt: dayjs(lastEpisodeAiredAt).toISOString() }),
+        ...(intervalInDays && { intervalInDays }),
+        ...(episodeAired && { episodeAired }),
+        ...(isMainPlatform && { isMainPlatform }),
+      }, 
+      include: {
+        anime: true, platform: true
+      }
+    })
+    return { ...animePlatform }
+  } catch(err) {
+    console.log('Error in the createAnimePlatform service');
+    if (err.code === "P2003") {
+      throw new customError("Anime or platform not found", 404);
+    } else if (err.code === "P2002") {
+      throw new customError("Anime platform already exists", 409);
+    }
+    throw err;
+  }
+}
+
+export const getAnimePlatformDetail = async (animeId, platformId) => {
+  try {
+    const animePlatform = await prisma.animePlatform.findUnique({ 
+      where: { 
+        platformId_animeId : { platformId, animeId }
+      },
+      include: {
+        anime: true, platform: true
+      }
+    })
+    if (!animePlatform) {
+      throw new customError('Anime platform not found', 404);
+    }
+    return { ...animePlatform }
+  } catch(err) {
+    console.log('Error in the getAnimePlatformDetail service');
+    throw err;
+  }
+}
+
+export const updateAnimePlatform = async (
+  animeId, platformId, link, accessType, nextEpisodeAiringAt, 
+  lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform
+) => {
+  try {
+    lastEpisodeAiredAt = lastEpisodeAiredAt === null ? null : dayjs(lastEpisodeAiredAt).toISOString()
+    if (isMainPlatform) {
+      await setUpMainPlatform(animeId)
+    }
+    const animePlatform = await prisma.animePlatform.update({
+      where: { platformId_animeId: { platformId, animeId } },
+      data: {
+        link, accessType, nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString(),
+        lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform
+      }, 
+      include: {
+        anime: true, platform: true
+      }
+    })
+    return { ...animePlatform }
+  } catch(err) {
+    console.log('Error in the updateAnimePlatform service');
+    if (err.code === "P2025") {
+      throw new customError("Anime platform not found", 404);
+    } else if (err.code === "P2002") {
+      throw new customError("Anime platform already exists", 409);
+    }
+    throw err;
+  }
+}
+
+export const createOrUpdateAnimePlatform = async (
+  animeId, platformId, link, accessType, nextEpisodeAiringAt, 
+  lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform
+) => {
+  try {
+    lastEpisodeAiredAt = lastEpisodeAiredAt ? dayjs(lastEpisodeAiredAt).toISOString() : lastEpisodeAiredAt
+    if (isMainPlatform) {
+      await setUpMainPlatform(animeId)
+    }
+    const animePlatform = await prisma.animePlatform.upsert({
+      where: { platformId_animeId: { platformId, animeId } },
+      create: {
+        animeId, platformId, link, accessType, nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString(),
+        ...(lastEpisodeAiredAt && { lastEpisodeAiredAt }),
+        ...(intervalInDays && { intervalInDays }),
+        ...(episodeAired && { episodeAired }),
+        ...(isMainPlatform && { isMainPlatform }),
+      }, 
+      update: {
         ...(link && { link }),
         ...(accessType && { accessType }),
         ...(nextEpisodeAiringAt && { nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString() }),
-        ...(lastEpisodeAiredAt && { lastEpisodeAiredAt: dayjs(lastEpisodeAiredAt).toISOString() }),
-        ...(icon && { icon }),
-        ...(episodeAired && { episodeAired }),
-      }, 
-      include: { 
-        anime: true 
+        ...((lastEpisodeAiredAt || lastEpisodeAiredAt === null) && { lastEpisodeAiredAt }),
+        ...(intervalInDays && { intervalInDays }),
+        ...((episodeAired || episodeAired === 0) && { episodeAired }),
+        ...((isMainPlatform || isMainPlatform === false) && { isMainPlatform }),
+      },
+      include: {
+        anime: true, platform: true
       }
     })
-    return { ...platform }
+
+    return { ...animePlatform }
   } catch(err) {
-    console.log('Error in the updatePlatrom service', err);
-    if (err.code === "P2025") {
-      throw new customError("Platform not found", 404);
+    console.log('Error in the createOrUpdateAnimePlatform service');
+    if (err.code === "P2003") {
+      throw new customError("Anime platform not found", 404);
     } else if (err.code === "P2002") {
-      throw new customError("Platform with this link already exists", 409);
+      throw new customError("Anime platform already exists", 409);
     }
     throw err;
   }
 }
 
-export const deletePlatform = async (platformId) => {
+export const deleteAnimePlatform = async (animeId, platformId) => {
   try {
-    const platform = await prisma.platform.delete({
-      where: { id: platformId },
+    const animePlatform = await prisma.animePlatform.delete({
+      where: { 
+        platformId_animeId: { platformId, animeId } 
+      },
       include: { 
-        anime: true 
+        anime: true, platform: true
       }
     })
-    return { ...platform }
+
+    return { ...animePlatform }
   } catch(err) {
-    console.log('Error in the deletePlatform service', err);
+    console.log('Error in the deleteAnimePlatform service');
     if (err.code === "P2025") {
-      throw new customError("Platform not found", 404);
+      throw new customError("Anime platform not found", 404);
     }
     throw err;
   }
 }
 
-export const getAllPlatforms = async (
-  animeId, name, accessType, 
-  nextEpisodeAiringAtMinimum, nextEpisodeAiringAtMaximum, lastEpisodeAiredAtMinimum, lastEpisodeAiredAtMaximum,
-  episodeAiredMinimum, episodeAiredMaximum, sortBy='nextEpisodeAiringAt', sortOrder='desc'
-) => {
+export const getAnimePlatforms = async (animeId) => {
   try {
-    accessType = accessType ? accessType.split(',') : [];
-    const platform = await prisma.platform.findMany({
-      where: { 
-        ...(animeId && { animeId }),
-        ...(name && {
-          name: { contains: name, mode: 'insensitive' }
-        }),
-        ...(accessType?.length > 0 && {
-          accessType: { in: accessType }
-        }),
-        ...(nextEpisodeAiringAtMinimum || nextEpisodeAiringAtMaximum
-          ? {
-              nextEpisodeAiringAt: {
-                ...(nextEpisodeAiringAtMinimum && { gte: dayjs(nextEpisodeAiringAtMinimum).toISOString() }),
-                ...(nextEpisodeAiringAtMaximum && { lte: dayjs(nextEpisodeAiringAtMaximum).toISOString() }),
-              },
-            }
-          : {}
-        ),
-        ...(lastEpisodeAiredAtMinimum || lastEpisodeAiredAtMaximum
-          ? {
-              lastEpisodeAiredAt: {
-                ...(lastEpisodeAiredAtMinimum && { gte: dayjs(lastEpisodeAiredAtMinimum).toISOString() }),
-                ...(lastEpisodeAiredAtMaximum && { lte: dayjs(lastEpisodeAiredAtMaximum).toISOString() }),
-              },
-            }
-          : {}
-        ),
-        ...(episodeAiredMinimum || episodeAiredMaximum
-          ? {
-              episodeAired: {
-                ...(episodeAiredMinimum && { gte: episodeAiredMinimum }),
-                ...(episodeAiredMaximum && { lte: episodeAiredMaximum }),
-              },
-            }
-          : {}
-        ),
-      },
-      orderBy: {
-        [sortBy]: sortOrder
-      },
-      include: { anime: true }
+    const animePlatforms = await prisma.animePlatform.findMany({
+      where: { animeId },
+      include: { anime: true, platform: true }
     })
 
-    if (!platform) {
-      throw new customError('Platform not found', 404);
-    }
-    return { ...platform }
+    return { ...animePlatforms }
   } catch(err) {
-    console.log('Error in the getAllPlatforms service', err);
+    console.log('Error in the getAnimePlatforms service');
     throw err;
   }
 }
 
-// console.log((await createOrUpdatePlatformSchedule(12, 3, '2025-04-20T08:30:00.000Z')))
-// console.log((await getPlatformSchedule(12)));
+console.log(await getAnimePlatforms(16));

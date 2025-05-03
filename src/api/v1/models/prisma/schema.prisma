@@ -112,8 +112,6 @@ model AnimePlatform {
   animeId    Int @map("anime_id")
   platformId Int @map("anime_platform_id")
 
-  name                String
-  icon                String?
   link                String     @unique
   accessType          AccessType @map("access_type")
   nextEpisodeAiringAt DateTime   @map("next_episode_airing_at")
@@ -132,8 +130,7 @@ model AnimePlatform {
 
 model Platform {
   id   Int    @id @default(autoincrement())
-  name String
-  icon String
+  name String @unique
 
   animePlatform AnimePlatform[]
 
