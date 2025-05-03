@@ -1,51 +1,64 @@
 import { z } from "zod";
 import { 
-  id, link, oneAccessType, q, validate, num_watched_episodes, manyAccessType, dateTime, sortByPlatform, sortOrder 
+  idQ, link, oneAccessType, q, validate, num_watched_episodes, dateTime,
+  booleanB,
+  idB, 
 } from './index.validator.js';
 
-export const createPlatform = validate(
-  z.object({
-    animeId: num_watched_episodes, 
-    name: q, 
-    link: link, 
-    accessType: oneAccessType, 
-    nextEpisodeAiringAt: dateTime,
-    lastEpisodeAiredAt: dateTime.optional(), 
-    icon: link.optional(), 
-    episodesAired: num_watched_episodes.optional()
-  })
-, 'body');
+// Basic Platform 
 
-export const getPlatformDetail = validate(
+export const platformId = validate(
   z.object({
-    platformId: id
+    platformId: idQ,
   })
 , 'params');
 
-export const updatePlatrom = validate(
+export const animeId = validate(
   z.object({
-    name: q.optional(), 
-    link: link.optional(), 
-    accessType: oneAccessType.optional(), 
-    nextEpisodeAiringAt: dateTime.optional(),
-    lastEpisodeAiredAt: dateTime.optional(), 
-    icon: link.optional(), 
-    episodesAired: num_watched_episodes.optional()
+    animeId: idQ,
+  })
+, 'params');
+
+export const name = validate(
+  z.object({
+    name: q,
   })
 , 'body');
 
-export const getAllPlatforms = validate(
+// Anime Platform
+
+export const createAnimePlatform = validate(
   z.object({
-    animeId: id.optional(),
-    name: q.optional(), 
-    accessType: manyAccessType.optional(), 
-    nextEpisodeAiringAtMinimum: dateTime.optional(),
-    nextEpisodeAiringAtMaximum: dateTime.optional(),
-    lastEpisodeAiredAtMinimum: dateTime.optional(), 
-    lastEpisodeAiredAtMaximum: dateTime.optional(), 
-    episodeAiredMinimum: id.optional(),
-    episodeAiredMaximum: id.optional(),
-    sortBy: sortByPlatform.optional(),
-    sortOrder: sortOrder.optional()
+    link: link, 
+    accessType: oneAccessType, 
+    nextEpisodeAiringAt: dateTime,
+    lastEpisodeAiredAt: dateTime.nullable().optional(), 
+    intervalInDays: idB.optional(), 
+    episodeAired: num_watched_episodes.optional(), 
+    isMainPlatform: booleanB.optional(),
   })
-, 'query');
+, 'body');
+
+export const updateAnimePlatform = validate(
+  z.object({
+    link: link, 
+    accessType: oneAccessType, 
+    nextEpisodeAiringAt: dateTime, 
+    lastEpisodeAiredAt: dateTime.nullable(), 
+    intervalInDays: idB, 
+    episodeAired: num_watched_episodes, 
+    isMainPlatform: booleanB,
+  })
+, 'body');
+
+export const createOrUpdateAnimePlatform = validate(
+  z.object({
+    link: link.optional(), 
+    accessType: oneAccessType.optional(), 
+    nextEpisodeAiringAt: dateTime.optional(), 
+    lastEpisodeAiredAt: dateTime.nullable().optional(), 
+    intervalInDays: idB.optional(), 
+    episodeAired: num_watched_episodes.optional(), 
+    isMainPlatform: booleanB.optional(),
+  })
+, 'body');

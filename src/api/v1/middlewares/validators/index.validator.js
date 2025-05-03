@@ -63,6 +63,11 @@ export const id = z
   .string()
   .transform((val) => (val ? Number(val) : undefined))
   .refine((val) => (val === undefined || (Number.isInteger(val) && val >= 0)), "Positive integer number")
+export const idQ = z
+  .string()
+  .transform((val) => (val ? Number(val) : undefined))
+  .refine((val) => (val === undefined || (Number.isInteger(val) && val > 0)), "Positive integer number")
+export const idB = z.number().int().positive()
 export const ranking_type = z
   .enum(["all", "airing", "upcoming", "tv", "ova", "movie", "special", "bypopularity", "favorite"], {
     errorMap: () => ({ 

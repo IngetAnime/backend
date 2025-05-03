@@ -15,7 +15,7 @@ export default (app) => {
 
   router.use('/auth', auth);
   router.use('/mal', mal);
-  router.use('/platform', platform);
+  router.use('/anime', platform);
   router.use('/anime', anime);
   router.use('/schedule', schedule);
   router.use('/user', user);

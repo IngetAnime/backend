@@ -180,30 +180,50 @@ export const createOrUpdateAnimePlatform = async (
     if (isMainPlatform) {
       await setUpMainPlatform(animeId)
     }
-    const animePlatform = await prisma.animePlatform.upsert({
-      where: { platformId_animeId: { platformId, animeId } },
-      create: {
-        animeId, platformId, link, accessType, nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString(),
-        ...(lastEpisodeAiredAt && { lastEpisodeAiredAt }),
-        ...(intervalInDays && { intervalInDays }),
-        ...(episodeAired && { episodeAired }),
-        ...(isMainPlatform && { isMainPlatform }),
-      }, 
-      update: {
-        ...(link && { link }),
-        ...(accessType && { accessType }),
-        ...(nextEpisodeAiringAt && { nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString() }),
-        ...((lastEpisodeAiredAt || lastEpisodeAiredAt === null) && { lastEpisodeAiredAt }),
-        ...(intervalInDays && { intervalInDays }),
-        ...((episodeAired || episodeAired === 0) && { episodeAired }),
-        ...((isMainPlatform || isMainPlatform === false) && { isMainPlatform }),
-      },
-      include: {
-        anime: true, platform: true
-      }
-    })
 
-    return { ...animePlatform }
+    let animePlatform, statusCode = 200;
+    try {
+      animePlatform = await prisma.animePlatform.update({
+        where: { 
+          platformId_animeId: { platformId, animeId } 
+        },
+        data: {
+          ...(link && { link }),
+          ...(accessType && { accessType }),
+          ...(nextEpisodeAiringAt && { nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString() }),
+          ...((lastEpisodeAiredAt || lastEpisodeAiredAt === null) && { lastEpisodeAiredAt }),
+          ...(intervalInDays && { intervalInDays }),
+          ...((episodeAired || episodeAired === 0) && { episodeAired }),
+          ...((isMainPlatform || isMainPlatform === false) && { isMainPlatform }),
+        },
+        include: {
+          anime: true, platform: true
+        }
+      })
+    } catch(err) {
+      if (err.code === "P2025") {
+        statusCode = 201;
+        if (!link || !accessType || !nextEpisodeAiringAt) {
+          throw new customError(`Creating a new anime platform requires link, accessType, and nextEpisodeAiringAt`, 400)
+        }
+        animePlatform = await prisma.animePlatform.create({
+          data: {
+            animeId, platformId, link, accessType, nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString(),
+            ...(lastEpisodeAiredAt && { lastEpisodeAiredAt }),
+            ...(intervalInDays && { intervalInDays }),
+            ...(episodeAired && { episodeAired }),
+            ...(isMainPlatform && { isMainPlatform }),
+          },
+          include: {
+            anime: true, platform: true
+          }
+        })
+      } else {
+        throw err;
+      }
+    }
+
+    return { ...animePlatform, statusCode }
   } catch(err) {
     console.log('Error in the createOrUpdateAnimePlatform service');
     if (err.code === "P2003") {
@@ -249,5 +269,3 @@ export const getAnimePlatforms = async (animeId) => {
     throw err;
   }
 }
-
-console.log(await getAnimePlatforms(16));
