@@ -28,8 +28,7 @@ export const username = z
   )
 export const identifier = z
   .string()
-  .min(8, "Password must be at least 8 characters long")
-  .max(64, "Password must not exceed 64 characters")
+  .min(3, "Indentifier must be at least 3 characters long")
   .refine(
     (value) =>
       /^[a-zA-Z0-9_]+$/.test(value) || /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value),

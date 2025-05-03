@@ -20,7 +20,10 @@ platformScheduler();
 animeScheduler();
 
 // Setting-up cors origin
-const allowedOrigins = ['http://localhost:5173']
+const allowedOrigins = [
+  `${process.env.CLIENT_URL || 'http://localhost:5173'}`, 
+  ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:5173'] : [])
+]
 
 // Enabling request body parsing
 app.use(express.json()); // Content-Type:application/json
@@ -49,8 +52,11 @@ Views(app);
 // Error handling middleware
 app.use(errorHandler);
 
-const url = process.env.BASE_URL || 'http://localhost:3000';
-const port = process.env.PORT || 3000;
-server.listen(port, () => {
-  console.log(`Server running at ${url}`);
+// Listen
+
+let port = process.env.PORT || 3000;
+let url = process.env.BASE_URL || `http://localhost:3000`;
+
+server.listen(port, '0.0.0.0', () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode at ${url}`);
 })

@@ -1,6 +1,8 @@
 import * as services from '../services/auth.service.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration.js';
+import { generateGoogleAuthUrl } from '../utils/google.js';
+import { generateMALAuthUrl } from '../utils/mal.js';
 
 dayjs.extend(duration);
 
@@ -99,6 +101,16 @@ export const resetPassword = async (req, res, next) => {
   }
 }
 
+export const getGoogleAuthUrl = async (req, res, next) => {
+  try {
+    const authorizationUrl = generateGoogleAuthUrl();
+    res.status(200).json({ authorizationUrl });
+  } catch(err) {
+    console.log("Error in the getGoogleAuthUrl controller");
+    next(err);
+  }
+}
+
 export const loginWithGoogle = async (req, res, next) => {
   try {
     const { code } = req.body;
@@ -107,6 +119,16 @@ export const loginWithGoogle = async (req, res, next) => {
     res.status(statusCode).json({ ...data });
   } catch(err) {
     console.log("Error in the loginWithGoogle controller");
+    next(err);
+  }
+}
+
+export const getMALAuthUrl = async (req, res, next) => {
+  try {
+    const authorizationUrl = generateMALAuthUrl();
+    res.status(200).json({ authorizationUrl });
+  } catch(err) {
+    console.log("Error in the getMALAuthUrl controller");
     next(err);
   }
 }

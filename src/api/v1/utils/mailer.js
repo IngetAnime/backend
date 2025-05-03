@@ -32,14 +32,14 @@ export const sendEmail = (to, subject, html) => {
 
 export const sendEmailVerification = async (email, otp) => {
   const emailTemplatePath = path.resolve(`${mailPath}/emailVerification.ejs`);
-  const resetLink = `${process.env.CLIENT_URL}/email-verification?token=${getToken({ email, otp, type: 'email_verification' }, '10m')}`
+  const resetLink = `${process.env.CLIENT_URL}/auth/email-verification?token=${getToken({ email, otp, type: 'email_verification' }, '10m')}`
   const htmlContent = await ejs.renderFile(emailTemplatePath, { resetLink });
   sendEmail(email, 'Email Verification', htmlContent);
 }
 
 export const sendResetPassword = async (email, otp) => {
   const emailTemplatePath = path.resolve(`${mailPath}/resetPassword.ejs`);
-  const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${getToken({ email, otp, type: 'reset_password' }, '10m')}`
+  const resetLink = `${process.env.CLIENT_URL}/auth/forgot-password?token=${getToken({ email, otp, type: 'reset_password' }, '10m')}`
   const htmlContent = await ejs.renderFile(emailTemplatePath, { resetLink });
   sendEmail(email, 'Reset Password', htmlContent);
 }
