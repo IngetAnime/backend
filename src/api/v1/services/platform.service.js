@@ -12,7 +12,7 @@ export const createPlatform = async (name) => {
     const platform = await prisma.platform.create({
       data: { name }
     })
-    return { ...platform }
+    return platform
   } catch(err) {
     console.log('Error in the createPlatform service');
     if (err.code === "P2002") {
@@ -30,7 +30,7 @@ export const getPlatformDetail = async (id) => {
     if (!platform) {
       throw new customError("Platform not found", 404);
     }
-    return { ...platform }
+    return platform
   } catch(err) {
     console.log('Error in the getPlatformDetail service');
     throw err;
@@ -45,7 +45,7 @@ export const updatePlatform = async (id, name) => {
         ...(name && { name })
       }
     })
-    return { ...platform }
+    return platform
   } catch(err) {
     console.log('Error in the updatePlatform service');
     if (err.code === "P2025") {
@@ -62,7 +62,7 @@ export const deletePlatform = async (id) => {
     const platform = await prisma.platform.delete({
       where: { id }
     })
-    return { ...platform }
+    return platform
   } catch(err) {
     console.log('Error in the deletePlatform service');
     if (err.code === "P2025") {
@@ -75,7 +75,7 @@ export const deletePlatform = async (id) => {
 export const getPlatforms = async () => {
   try {
     const platforms = await prisma.platform.findMany()
-    return { ...platforms }
+    return platforms
   } catch(err) {
     console.log('Error in the getPlatforms service');
     throw err;
@@ -111,7 +111,7 @@ export const createAnimePlatform = async (
         anime: true, platform: true
       }
     })
-    return { ...animePlatform }
+    return animePlatform
   } catch(err) {
     console.log('Error in the createAnimePlatform service');
     if (err.code === "P2003") {
@@ -136,7 +136,7 @@ export const getAnimePlatformDetail = async (animeId, platformId) => {
     if (!animePlatform) {
       throw new customError('Anime platform not found', 404);
     }
-    return { ...animePlatform }
+    return animePlatform
   } catch(err) {
     console.log('Error in the getAnimePlatformDetail service');
     throw err;
@@ -162,7 +162,7 @@ export const updateAnimePlatform = async (
         anime: true, platform: true
       }
     })
-    return { ...animePlatform }
+    return animePlatform
   } catch(err) {
     console.log('Error in the updateAnimePlatform service');
     if (err.code === "P2025") {
@@ -226,7 +226,7 @@ export const createOrUpdateAnimePlatform = async (
       }
     }
 
-    return { ...animePlatform, statusCode }
+    return { data: animePlatform, statusCode }
   } catch(err) {
     console.log('Error in the createOrUpdateAnimePlatform service');
     if (err.code === "P2003") {
@@ -249,7 +249,7 @@ export const deleteAnimePlatform = async (animeId, platformId) => {
       }
     })
 
-    return { ...animePlatform }
+    return animePlatform
   } catch(err) {
     console.log('Error in the deleteAnimePlatform service');
     if (err.code === "P2025") {
@@ -266,7 +266,7 @@ export const getAnimePlatforms = async (animeId) => {
       include: { anime: true, platform: true }
     })
 
-    return { ...animePlatforms }
+    return animePlatforms
   } catch(err) {
     console.log('Error in the getAnimePlatforms service');
     throw err;
