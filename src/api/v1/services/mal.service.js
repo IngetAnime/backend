@@ -318,6 +318,8 @@ export const updateMyAnimeListStatus = async (
     return data;
   } catch(err) {
     console.log('Error in the updateMyAnimeListStatus service');
+    if (err instanceof customError) throw err;
+    if (err instanceof customError) throw err;
     throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
   }
 }
@@ -350,6 +352,7 @@ export const deleteMyAnimeListItem = async (user_id, anime_id) => {
     return data;
   } catch(err) {
     console.log('Error in the deleteMyAnimeListItem service');
+    if (err instanceof customError) throw err;
     throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
   }
 }
@@ -394,6 +397,7 @@ export const getUserAnimeList = async (user_id, status, sort, limit, offset, fie
     return data;
   } catch(err) {
     console.log('Error in the getUserAnimeList service');
+    if (err instanceof customError) throw err;
     throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
   }
 }
@@ -411,6 +415,7 @@ export const getMyUserInformation = async (user_id) => {
     return data;
   } catch(err) {
     console.log('Error in the getMyUserInformation service');
+    if (err instanceof customError) throw err;
     throw new customError(`${err.message || err.error}`, err.status, err.error || err);
   }
 }

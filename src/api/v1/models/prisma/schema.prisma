@@ -69,10 +69,10 @@ model AnimeList {
   animeId         Int  @map("anime_id")
   animePlatformId Int? @map("anime_platform_id") // User selected platform
 
-  progress           Int?
-  score              Int?
   startDate          DateTime?  @map("start_date")
   finishDate         DateTime?  @map("finish_date")
+  progress           Int        @default(0)
+  score              Int        @default(0)
   episodesDifference Int        @default(0) @map("episodes_difference") // Example: Bstation free user
   status             ListStatus @default(plan_to_watch)
   isSyncedWithMal    Boolean    @default(false)

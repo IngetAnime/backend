@@ -97,7 +97,7 @@ export const status = z
       message: "status must be one of: watching, completed, plan_to_watch, on_hold, or dropped"
     }),
   })
-export const score = z.number().min(1).max(10)
+export const score = z.number().int().min(0).max(10)
 export const num_watched_episodes = z.number().int().nonnegative()
 export const date = z
   .string()
