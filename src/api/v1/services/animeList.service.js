@@ -70,7 +70,7 @@ export const createAnimeList = async (
       await updateToMAL(animeList)
     }
 
-    return { ...formattedAnimeList(animeList) };
+    return formattedAnimeList(animeList);
   } catch(err) {
     console.log('Error in the createAnimeList service');
     if (err.code === 'P2002') {
@@ -95,7 +95,7 @@ export const getAnimeListDetail = async (userId, animeId) => {
     if (!animeList) {
       throw new customError('Anime list not found', 404);
     }
-    return { ...formattedAnimeList(animeList) }
+    return formattedAnimeList(animeList)
   } catch(err) {
     console.log('Error in the getAnimeListDetail service', err);
     throw err;
@@ -125,7 +125,7 @@ export const updateAnimeList = async (
       await updateToMAL(animeList)
     }
 
-    return { ...formattedAnimeList(animeList) };
+    return formattedAnimeList(animeList);
   } catch(err) {
     console.log('Error in the updateAnimeList service');
     if (err.code === 'P2003') {
@@ -209,7 +209,7 @@ export const createOrUpdateAnimeList = async (
       await updateToMAL(animeList)
     }
 
-    return { ...formattedAnimeList(animeList), statusCode };
+    return { data: formattedAnimeList(animeList), statusCode };
   } catch(err) {
     console.log('Error in the createOrUpdateAnimeList service', err);
     if (err.code === "P2003") {
@@ -234,7 +234,7 @@ export const deleteAnimeList = async (userId, animeId) => {
       await deleteFromMAL(animeList)
     }
     
-    return { ...animeList }
+    return formattedAnimeList(animeList)
   } catch(err) {
     console.log('Error in the deleteAnimeList service', err);
     if (err.code === "P2025") {
