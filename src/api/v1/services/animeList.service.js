@@ -26,7 +26,7 @@ const deleteFromMAL = async (animeList) => {
   }
 }
 
-const formattedAnimeList = (animeList) => {
+export const formattedAnimeList = (animeList) => {
   if (animeList.startDate) {
     animeList.startDate = dayjs.utc(animeList.startDate).format('YYYY-MM-DD')
   }
@@ -35,6 +35,8 @@ const formattedAnimeList = (animeList) => {
   }
   return animeList;
 }
+
+// Basic CRUD AnimeList
 
 export const createAnimeList = async (
   userId, animeId, animePlatformId, startDate, finishDate,
