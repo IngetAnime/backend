@@ -35,17 +35,18 @@ const maskString = (string) => {
 export const register = async (email, password, username) => {
   try {
     // Loop until get valid username
+    let username = email.split('@')[0];
+    let isUnique = false;
     if (!username) {
-      username = generateRandom(8, 'alphanumeric');
-      let isUnique = false;
       while(!isUnique) {
         if (await prisma.user.findUnique({ where: { username } })) {
-          username = generateRandom(8, 'alphanumeric');
+          username = email.split('@')[0] + generateRandom(4, 'numeric');
         } else {
           isUnique = true;
         }
       }
     }
+    
 
     // Create account
     const hashedPassword = await hashPassword(password);
@@ -60,7 +61,7 @@ export const register = async (email, password, username) => {
     // Send email verification to user
     await sendEmailVerification(user.email, user.otpCode);
     
-    return { ...(getUserData(user)) };
+    return getUserData(user);
   } catch (err) {
     console.log("Error in the register service");
     if (err.code == "P2002") {
@@ -93,7 +94,7 @@ export const resendEmailVerification = async (id) => {
 
     await sendEmailVerification(user.email, user.otpCode);
     
-    return { ...(getUserData(user)) };
+    return getUserData(user);
   } catch(err) {
     console.log("Error in the resendEmailVerification service");
     if (err.code === "P2025") {
@@ -122,7 +123,7 @@ export const verifyEmail = async (id, email, otpCode) => {
       data: { isVerifed: true }
     })
 
-    return { ...(getUserData(user)) };
+    return getUserData(user);
   } catch(err) {
     console.log("Error in the verifyEmail service");
     throw err;
@@ -141,7 +142,7 @@ export const login = async (identifier, password) => {
       throw new customError('Invalid email, username, or password', 400);
     }
 
-    return { ...(getUserData(user)) };
+    return getUserData(user);
   } catch(err) {
     console.log("Error in the login service");
     throw err;
@@ -197,7 +198,7 @@ export const resetPassword = async (id, email, otpCode, newPassword) => {
       throw new customError('Token has expired', 400)
     }
 
-    return { ...(getUserData(user)) };
+    return getUserData(user);
   } catch(err) {
     console.log("Error in the resetPassword service");
     if (err.code === "P2025") {
@@ -218,7 +219,7 @@ export const loginWithGoogle = async (code) => {
     let statusCode = 200;
     if (user) { 
       if (user.googleId === id) { // If email found and already connect to google
-        return { ...(getUserData(user)), statusCode };
+        return { ...getUserData(user), statusCode };
       }
 
       // If email found, but not connect to google  
@@ -230,7 +231,7 @@ export const loginWithGoogle = async (code) => {
         }
       })
       
-      return { ...(getUserData(user)), statusCode };
+      return { ...getUserData(user), statusCode };
     } 
     
     // Generate username
@@ -254,7 +255,7 @@ export const loginWithGoogle = async (code) => {
       }
     });
 
-    return { ...(getUserData(user)), statusCode: 201 };
+    return { ...getUserData(user), statusCode: 201 };
   } catch(err) {
     console.log("Error in the loginWithGoogle service");
     if (err.code === "P2025") {
@@ -282,7 +283,7 @@ export const loginWithMAL = async (code) => {
           ...(!user.picture && picture && { picture })
         }
       })
-      return { ...(getUserData(user)), statusCode: 200 };
+      return { ...getUserData(user), statusCode: 200 };
     } 
     
     // Generate username
@@ -307,7 +308,7 @@ export const loginWithMAL = async (code) => {
       }
     });
 
-    return { ...(getUserData(user)), statusCode: 201 };
+    return { ...getUserData(user), statusCode: 201 };
   } catch(err) {
     console.log("Error in the loginWithMAL service", err);
     if (err.code === "P2025") {
@@ -326,7 +327,7 @@ export const isAuthenticated = async (id) => {
     user = getUserData(user);
     delete user.token;
 
-    return { ...user };
+    return user;
   } catch(err) {
     console.log("Error in the isAuthenticated service", err);
     throw err;
