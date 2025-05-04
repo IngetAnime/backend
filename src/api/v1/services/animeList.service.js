@@ -2,7 +2,7 @@ import prisma from "../utils/prisma.js";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc.js';
 import customError from '../utils/customError.js';
-import { updateMyAnimeListStatus } from "./mal.service.js";
+import { deleteMyAnimeListItem, updateMyAnimeListStatus } from "./mal.service.js";
 
 dayjs.extend(utc)
 
@@ -13,6 +13,14 @@ const updateToMAL = async (animeList) => {
     await updateMyAnimeListStatus(
       animeList.userId, animeList.anime.malId, animeList.status, animeList.score, animeList.progress, startDate, finishDate
     )
+  } catch(err) {
+    console.log(err.message);
+  }
+}
+
+const deleteFromMAL = async (animeList) => {
+  try {
+    await deleteMyAnimeListItem(animeList.userId, animeList.anime.malId)
   } catch(err) {
     console.log(err.message);
   }
@@ -221,6 +229,11 @@ export const deleteAnimeList = async (userId, animeId) => {
         anime: true, platform: true
       }
     })
+
+    if (animeList.isSyncedWithMal) {
+      await deleteFromMAL(animeList)
+    }
+    
     return { ...animeList }
   } catch(err) {
     console.log('Error in the deleteAnimeList service', err);
