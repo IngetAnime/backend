@@ -6,34 +6,26 @@ import { authMiddleware, authHandler, adminHandler, optAuthMiddleware } from "..
 const router = e.Router()
 
 router.post('/', authMiddleware, authHandler, adminHandler, validators.createAnime, controllers.createAnime);
-// router.get('/my-list-status', authMiddleware, authHandler, validators.getAllAnimeList, controllers.getAllAnimeList);
-router.get('/timeline', optAuthMiddleware, validators.getAnimeTimeline, controllers.getAnimeTimeline);
-// router.get('/:animeId/my-list-status', authMiddleware, authHandler, validators.animeId, controllers.getAnimeListDetail);
-router.get('/:animeId', validators.animeId, controllers.getAnimeDetailByAnimeId);
-// router.patch(
-//   '/:animeId/my-list-status', 
-//   authMiddleware, authHandler, 
-//   validators.animeId, validators.createOrUpdateAnimeList,
-//   controllers.createOrUpdateAnimeList
-// )
-router.patch(
+// router.get('/timeline', optAuthMiddleware, validators.getAnimeTimeline, controllers.getAnimeTimeline);
+router.get('/:animeId', validators.animeId, controllers.getAnimeDetail);
+router.put(
   '/:animeId', 
   authMiddleware, authHandler, adminHandler,
   validators.animeId, validators.updateAnime,
-  controllers.updateAnimeByAnimeId
+  controllers.updateAnime
 )
-// router.delete(
-//   '/:animeId/my-list-status', 
-//   authMiddleware, authHandler, 
-//   validators.animeId, 
-//   controllers.deleteAnimeList
-// )
+router.patch(
+  '/:animeId', 
+  authMiddleware, authHandler, adminHandler,
+  validators.animeId, validators.updateAnimeFields,
+  controllers.updateAnimeFields
+)
 router.delete(
   '/:animeId', 
   authMiddleware, authHandler, adminHandler, 
   validators.animeId, 
-  controllers.deleteAnimeByAnimeId
+  controllers.deleteAnime
 )
-router.get('/', validators.getAllAnime, controllers.getAllAnime);
+// router.get('/', validators.getAllAnime, controllers.getAllAnime);
 
 export default router;

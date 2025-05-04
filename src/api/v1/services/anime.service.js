@@ -8,7 +8,14 @@ import timezone from 'dayjs/plugin/timezone.js';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// CRUD Database Anime
+const formattedAnime = (anime) => {
+  if (anime.releaseAt) {
+    anime.releaseAt = dayjs.utc(anime.releaseAt).format('YYYY-MM-DD')
+  }
+  return anime;
+}
+
+// Basic CRUD Anime
 
 export const createAnime = async (malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status) => {
   try {
@@ -17,23 +24,27 @@ export const createAnime = async (malId, picture, title, titleID, titleEN, relea
     picture = picture || animeFromMAL.main_picture?.large || undefined;
     title = title || animeFromMAL.title || undefined;
     titleEN = titleEN || animeFromMAL.alternative_titles.en || undefined;
-    releaseAt = releaseAt || dayjs(animeFromMAL.start_date).add(7, 'hour') || undefined;
+    releaseAt = releaseAt || animeFromMAL.start_date ? dayjs.utc(animeFromMAL.start_date).format('YYYY-MM-DD') : undefined;
     episodeTotal = episodeTotal || animeFromMAL.num_episodes || undefined;
     status = status || animeFromMAL.status || undefined;
 
     const anime = await prisma.anime.create({
       data: {
         malId, picture, title,
-        ...(titleID && { titleID }),
-        ...(titleEN && { titleEN }),
-        ...(releaseAt && { releaseAt: dayjs(releaseAt).toISOString() }),
-        ...(episodeTotal && { episodeTotal }),
+        ...((titleID === null || titleID) && { titleID }),
+        ...((titleEN === null || titleEN) && { titleEN }),
+        ...(
+          releaseAt === null ? { releaseAt: null } : 
+          releaseAt ? { releaseAt: dayjs.utc(releaseAt) } : {}
+        ),
+        ...((episodeTotal === 0 || episodeTotal) && { episodeTotal }),
         ...(status && { status }),
       },
     })
-    return { ...anime }
+
+    return { ...formattedAnime(anime) }
   } catch(err) {
-    console.log('Error in the createAnime service', err);
+    console.log('Error in the createAnime service');
     if (err.code === "P2002") {
       throw new customError("Anime already exists", 409);
     }
@@ -41,27 +52,54 @@ export const createAnime = async (malId, picture, title, titleID, titleEN, relea
   }
 }
 
-export const getAnimeDetailById = async (animeId, malId) => {
+export const getAnimeDetail = async (animeId, malId) => {
   try {
     const anime = await prisma.anime.findUnique({
       where: {
         ...(animeId ? { id: animeId } : { malId })
       }, 
       include: {
-        mainPlatform: true, platforms: true
+        platforms: true
       }
     })
+
     if (!anime) {
       throw new customError('Anime not found', 404);
     }
-    return { ...anime }
+
+    return { ...formattedAnime(anime) }
   } catch(err) {
-    console.log('Error in the getAnimeDetailById service', err);
+    console.log('Error in the getAnimeDetail service');
     throw err;
   }
 }
 
-export const updateAnime = async (animeId, malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status, platformId) => {
+export const updateAnime = async (animeId, malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status) => {
+  try {
+    const anime = await prisma.anime.update({
+      where: {
+        ...(animeId ? { id: animeId } : { malId })
+      }, 
+      data: {
+        picture, title, titleID, titleEN, episodeTotal, status,
+        ...(releaseAt === null ? { releaseAt: null } : { releaseAt: dayjs.utc(releaseAt) }),
+      }, include: {
+        platforms: true,
+      }
+    })
+    return { ...formattedAnime(anime) }
+  } catch(err) {
+    console.log('Error in the updateAnime service');
+    if (err.code === "P2025") {
+      throw new customError("Anime not found", 404);
+    }
+    throw err;
+  }
+}
+
+export const updateAnimeFields = async (
+  animeId, malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status
+) => {
   try {
     const anime = await prisma.anime.update({
       where: {
@@ -70,25 +108,23 @@ export const updateAnime = async (animeId, malId, picture, title, titleID, title
       data: {
         ...(picture && { picture }),
         ...(title && { title }),
-        ...(titleID && { titleID }),
-        ...(titleEN && { titleEN }),
-        ...(releaseAt && { releaseAt: dayjs(releaseAt).toISOString() }),
-        ...(episodeTotal && { episodeTotal }),
+        ...((titleID === null || titleID) && { titleID }),
+        ...((titleEN === null || titleEN) && { titleEN }),
+        ...(
+          releaseAt === null ? { releaseAt: null } : 
+          releaseAt ? { releaseAt: dayjs.utc(releaseAt) } : {}
+        ),
+        ...((episodeTotal === 0 || episodeTotal) && { episodeTotal }),
         ...(status && { status }),
-        ...(platformId && { platformId }),
       }, include: {
-        mainPlatform: true,
+        platforms: true,
       }
     })
-    return { ...anime }
+    return { ...formattedAnime(anime) }
   } catch(err) {
-    console.log('Error in the updateAnime service', err);
+    console.log('Error in the updateAnimeFields service');
     if (err.code === "P2025") {
       throw new customError("Anime not found", 404);
-    } else if (err.code === "P2003") {
-      throw new customError("Platform not found", 404);
-    } else if (err.code === "P2002") {
-      throw new customError("Platform already exists", 409);
     }
     throw err;
   }
@@ -101,18 +137,20 @@ export const deleteAnime = async (animeId, malId) => {
         ...(animeId ? { id: animeId } : { malId })
       }, 
       include: {
-        mainPlatform: true, platforms: true
+        platforms: true
       }
     })
-    return { ...anime }
+    return { ...formattedAnime(anime) }
   } catch(err) {
-    console.log('Error in the deleteAnime service', err);
+    console.log('Error in the deleteAnime service');
     if (err.code === "P2025") {
       throw new customError("Anime not found", 404);
     }
     throw err;
   }
 }
+
+// Anime Get
 
 export const getAllAnime = async (
   title, releaseAtStart, releaseAtEnd, episodeTotalMinimum, episodeTotalMaximum, status,
@@ -257,180 +295,56 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
   }
 }
 
-// console.log((await getAnimeTimeline(21, 2)));
+// export const getAllAnimeList = async (
+//   userId, episodesDifferenceMinimum, episodesDifferenceMaximum, status, isSyncedWithMal, 
+//   sortBy='alphabetical', sortOrder='asc'
+// ) => {
+//   try {
+//     status = status ? status.split(',') : [];
+//     // sortBy = title,releaseAt,updatedAt,score,progress
+//     if (sortBy === 'title') {
+//       sortBy = { 
+//         anime: { title: sortOrder } 
+//       }
+//     } else if (sortBy === 'releaseAt') {
+//       sortBy = { 
+//         anime: { releaseAt: sortOrder } 
+//       }
+//     } else {
+//       sortBy = { [sortBy]: sortOrder }
+//     }
 
-// CRUD User Anime List
-
-export const createOrUpdateAnimeList = async (
-  userId, animeId, platformId, episodesDifference, progress, score, startDate, finishDate, status, isSyncedWithMal, timeZone='Asia/Jakarta'
-) => {
-  try {
-    let animeList;
-    let statusCode = 200;
-    startDate = startDate ? dayjs(startDate).tz(timeZone) : startDate
-    finishDate = finishDate ? dayjs(finishDate).tz(timeZone) : finishDate
-    try {
-      animeList = await prisma.animeList.update({
-        where: { 
-          userId_animeId: { userId, animeId }
-        },
-        data: {
-          ...(platformId && { platformId }),
-          ...((episodesDifference === 0 || episodesDifference) && { episodesDifference }),
-          ...((progress === 0 || progress) && { progress }),
-          ...((score === 0 || score) && { score }),
-          ...(
-            startDate === null ? { startDate: null } : 
-            startDate ? { startDate: dayjs(startDate).toISOString() } : {}
-          ),
-          ...(
-            finishDate === null ? { finishDate: null } : 
-            finishDate ? { finishDate: dayjs(finishDate).toISOString() } : {}
-          ),
-          ...(status && { status }),
-          ...(isSyncedWithMal && { isSyncedWithMal }),
-          ...(
-            isSyncedWithMal ? { isSyncedWithMal: true } : 
-            isSyncedWithMal === false ? { isSyncedWithMal: false } : {}
-          ),
-        },
-        include: {
-          anime: true, platform: true
-        }
-      });
-    } catch(err) {
-      if (err.code === "P2025") {
-        statusCode = 201;
-        animeList = await prisma.animeList.create({
-          data: {
-            userId, animeId,
-            ...(platformId && { platformId }),
-            ...(episodesDifference && { episodesDifference }),
-            ...(progress && { progress }),
-            ...(score && { score }),
-            ...(startDate && { startDate: dayjs(startDate).toISOString() }),
-            ...(finishDate && { finishDate: dayjs(finishDate).toISOString() }),
-            ...(status && { status }),
-            ...(isSyncedWithMal ? 
-              { isSyncedWithMal: true } : 
-              { isSyncedWithMal: false }),
-          },
-          include: {
-            anime: true, platform: true
-          }
-        });
-      } else {
-        throw err;
-      }
-    }
-
-    if (animeList.isSyncedWithMal) {
-      startDate = animeList.startDate ? dayjs(animeList.startDate).format('YYYY-MM-DD') : animeList.startDate;
-      finishDate = animeList.finishDate ? dayjs(animeList.finishDate).format('YYYY-MM-DD') : animeList.finishDate;
-      await updateMyAnimeListStatus(
-        animeList.userId, animeList.anime.malId, animeList.status, animeList.score, animeList.progress, startDate, finishDate
-      )
-    }
-    return { ...animeList, statusCode };
-  } catch(err) {
-    console.log('Error in the createOrUpdateAnimeList service', err);
-    if (err.code === "P2003") {
-      throw new customError("Platform not found", 404);
-    }
-    throw err;
-  }
-}
-
-export const getAnimeListDetail = async (userId, animeId) => {
-  try {
-    const animeList = await prisma.animeList.findUnique({
-      where: {
-        userId_animeId: { userId, animeId } 
-      },
-      include: {
-        anime: true, platform: true
-      }
-    })
-    if (!animeList) {
-      throw new customError('AnimeList not found', 404);
-    }
-    return { ...animeList }
-  } catch(err) {
-    console.log('Error in the getAnimeListDetail service', err);
-    throw err;
-  }
-}
-
-export const deleteAnimeList = async (userId, animeId) => {
-  try {
-    const animeList = await prisma.animeList.delete({
-      where: { 
-        userId_animeId: { userId, animeId } 
-      },
-      include: {
-        anime: true, platform: true
-      }
-    })
-    return { ...animeList }
-  } catch(err) {
-    console.log('Error in the deleteAnimeList service', err);
-    if (err.code === "P2025") {
-      throw new customError("AnimeList not found", 404);
-    }
-    throw err;
-  }
-}
-
-export const getAllAnimeList = async (
-  userId, episodesDifferenceMinimum, episodesDifferenceMaximum, status, isSyncedWithMal, 
-  sortBy='alphabetical', sortOrder='asc'
-) => {
-  try {
-    status = status ? status.split(',') : [];
-    // sortBy = title,releaseAt,updatedAt,score,progress
-    if (sortBy === 'title') {
-      sortBy = { 
-        anime: { title: sortOrder } 
-      }
-    } else if (sortBy === 'releaseAt') {
-      sortBy = { 
-        anime: { releaseAt: sortOrder } 
-      }
-    } else {
-      sortBy = { [sortBy]: sortOrder }
-    }
-
-    const animeList = await prisma.animeList.findMany({
-      where: {
-        userId,
-        ...(episodesDifferenceMinimum || episodesDifferenceMaximum
-          ? {
-              episodesDifference: {
-                ...(episodesDifferenceMinimum && { gte: episodesDifferenceMinimum }),
-                ...(episodesDifferenceMaximum && { lte: episodesDifferenceMaximum }),
-              },
-            }
-          : {}
-        ),
-        ...(status?.length > 0 && {
-          status: { in: status }
-        }),
-        ...(isSyncedWithMal && { isSyncedWithMal: JSON.parse(isSyncedWithMal) })
-      },
-      orderBy: sortBy,
-      include: {
-        anime: true, platform: true
-      }
-    })
-    if (!animeList) {
-      throw new customError('AnimeList not found', 404);
-    }
-    return { ...animeList }
-  } catch(err) {
-    console.log('Error in the getAllAnimeList service', err);
-    throw err;
-  }
-}
+//     const animeList = await prisma.animeList.findMany({
+//       where: {
+//         userId,
+//         ...(episodesDifferenceMinimum || episodesDifferenceMaximum
+//           ? {
+//               episodesDifference: {
+//                 ...(episodesDifferenceMinimum && { gte: episodesDifferenceMinimum }),
+//                 ...(episodesDifferenceMaximum && { lte: episodesDifferenceMaximum }),
+//               },
+//             }
+//           : {}
+//         ),
+//         ...(status?.length > 0 && {
+//           status: { in: status }
+//         }),
+//         ...(isSyncedWithMal && { isSyncedWithMal: JSON.parse(isSyncedWithMal) })
+//       },
+//       orderBy: sortBy,
+//       include: {
+//         anime: true, platform: true
+//       }
+//     })
+//     if (!animeList) {
+//       throw new customError('AnimeList not found', 404);
+//     }
+//     return { ...animeList }
+//   } catch(err) {
+//     console.log('Error in the getAllAnimeList service', err);
+//     throw err;
+//   }
+// }
 // console.log((await createOrUpdateAnimeList(21, 1, 3, 0, 4, 8, dayjs(), undefined, 'watching')));
 // console.log((await getAnimeListDetail(2)));
 // console.log((await deleteAnimeList(2)));
