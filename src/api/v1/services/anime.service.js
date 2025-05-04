@@ -42,7 +42,7 @@ export const createAnime = async (malId, picture, title, titleID, titleEN, relea
       },
     })
 
-    return { ...formattedAnime(anime) }
+    return formattedAnime(anime)
   } catch(err) {
     console.log('Error in the createAnime service');
     if (err.code === "P2002") {
@@ -67,7 +67,7 @@ export const getAnimeDetail = async (animeId, malId) => {
       throw new customError('Anime not found', 404);
     }
 
-    return { ...formattedAnime(anime) }
+    return formattedAnime(anime)
   } catch(err) {
     console.log('Error in the getAnimeDetail service');
     throw err;
@@ -87,7 +87,7 @@ export const updateAnime = async (animeId, malId, picture, title, titleID, title
         platforms: true,
       }
     })
-    return { ...formattedAnime(anime) }
+    return formattedAnime(anime)
   } catch(err) {
     console.log('Error in the updateAnime service');
     if (err.code === "P2025") {
@@ -120,7 +120,7 @@ export const updateAnimeFields = async (
         platforms: true,
       }
     })
-    return { ...formattedAnime(anime) }
+    return formattedAnime(anime)
   } catch(err) {
     console.log('Error in the updateAnimeFields service');
     if (err.code === "P2025") {
@@ -140,7 +140,7 @@ export const deleteAnime = async (animeId, malId) => {
         platforms: true
       }
     })
-    return { ...formattedAnime(anime) }
+    return formattedAnime(anime)
   } catch(err) {
     console.log('Error in the deleteAnime service');
     if (err.code === "P2025") {

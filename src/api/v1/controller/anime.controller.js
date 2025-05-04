@@ -6,7 +6,7 @@ export const createAnime = async (req, res, next) => {
   try {
     const { malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status } = req.body;
     const data = await services.createAnime(malId, picture, title, titleID, titleEN, releaseAt, episodeTotal, status);
-    res.status(201).json({ ...data });
+    res.status(201).json(data);
   } catch(err) {
     console.log("Error in the createAnime controller");
     next(err);
@@ -17,7 +17,7 @@ export const getAnimeDetail = async (req, res, next) => {
   try {
     const animeId = parseInt(req.params.animeId);
     const data = await services.getAnimeDetail(animeId);
-    res.status(200).json({ ...data });
+    res.status(200).json(data);
   } catch(err) {
     console.log("Error in the getAnimeDetail controller");
     next(err);
@@ -31,7 +31,7 @@ export const updateAnime = async (req, res, next) => {
     const data = await services.updateAnime(
       animeId, undefined, picture, title, titleID, titleEN, releaseAt, episodeTotal, status, platformId
     );
-    res.status(200).json({ ...data });
+    res.status(200).json(data);
   } catch(err) {
     console.log("Error in the updateAnime controller");
     next(err);
@@ -45,7 +45,7 @@ export const updateAnimeFields = async (req, res, next) => {
     const data = await services.updateAnimeFields(
       animeId, undefined, picture, title, titleID, titleEN, releaseAt, episodeTotal, status
     );
-    res.status(200).json({ ...data });
+    res.status(200).json(data);
   } catch(err) {
     console.log("Error in the updateAnimeFields controller");
     next(err);
@@ -56,7 +56,7 @@ export const deleteAnime = async (req, res, next) => {
   try {
     const animeId = parseInt(req.params.animeId);
     const data = await services.deleteAnime(animeId);
-    res.status(200).json({ ...data });
+    res.status(200).json(data);
   } catch(err) {
     console.log("Error in the deleteAnime controller");
     next(err);
