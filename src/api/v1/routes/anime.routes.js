@@ -7,21 +7,21 @@ const router = e.Router()
 
 router.post('/', authMiddleware, authHandler, adminHandler, validators.createAnime, controllers.createAnime);
 // router.get('/timeline', optAuthMiddleware, validators.getAnimeTimeline, controllers.getAnimeTimeline);
-router.get('/:animeId', validators.animeId, controllers.getAnimeDetail);
+router.get('/:animeId(\\d+)', validators.animeId, controllers.getAnimeDetail);
 router.put(
-  '/:animeId', 
+  '/:animeId(\\d+)', 
   authMiddleware, authHandler, adminHandler,
   validators.animeId, validators.updateAnime,
   controllers.updateAnime
 )
 router.patch(
-  '/:animeId', 
+  '/:animeId(\\d+)', 
   authMiddleware, authHandler, adminHandler,
   validators.animeId, validators.updateAnimeFields,
   controllers.updateAnimeFields
 )
 router.delete(
-  '/:animeId', 
+  '/:animeId(\\d+)', 
   authMiddleware, authHandler, adminHandler, 
   validators.animeId, 
   controllers.deleteAnime

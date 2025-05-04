@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { 
   validate, q, limit, offset, fields, id, ranking_type, sortAnime,
-  year, season, status, score, num_watched_episodes, date, sortList,
+  year, season,
 } from './index.validator.js';
 
 export const getAnimeList = validate(
@@ -53,26 +53,6 @@ export const getSeasonalAnimeP = validate(
 export const getSuggestedAnime = validate(
   z.object({
     limit: limit(1, 100).optional(),
-    offset: offset.optional(),
-    fields: fields.optional()
-  })
-, 'query')
-
-export const updateMyAnimeListStatus = validate(
-  z.object({
-    status: status.optional(),
-    score: score.optional(),
-    num_watched_episodes: num_watched_episodes.optional(),
-    start_date: date.optional(),
-    finish_date: date.optional(),
-  })
-, 'body')
-
-export const getUserAnimeList = validate(
-  z.object({
-    status: status.optional(),
-    sort: sortList.optional(),
-    limit: limit(1, 1000).optional(),
     offset: offset.optional(),
     fields: fields.optional()
   })

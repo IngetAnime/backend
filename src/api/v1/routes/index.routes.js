@@ -15,10 +15,10 @@ export default (app) => {
   })
 
   router.use('/auth', auth);
-  router.use('/mal', mal);
   router.use('/anime', platform);
   router.use('/anime', animeList);
   router.use('/anime', anime);
+  router.use('/anime', mal);
   router.use('/schedule', schedule);
   router.use('/user', user);
 

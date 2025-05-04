@@ -13,15 +13,15 @@ router.post(
   validators.name,
   controllers.createPlatform
 )
-router.get('/platform/:platformId', validators.platformId, controllers.getPlatformDetail)
+router.get('/platform/:platformId(\\d+)', validators.platformId, controllers.getPlatformDetail)
 router.put(
-  '/platform/:platformId',
+  '/platform/:platformId(\\d+)',
   authMiddleware, authHandler, adminHandler, 
   validators.platformId, validators.name,
   controllers.updatePlatform
 )
 router.delete(
-  '/platform/:platformId',
+  '/platform/:platformId(\\d+)',
   authMiddleware, authHandler, adminHandler, 
   validators.platformId,
   controllers.deletePlatform
@@ -31,26 +31,26 @@ router.get('/platform', controllers.getPlatforms)
 // Anime Platform
 
 router.post(
-  '/:animeId/platform/:platformId', 
+  '/:animeId(\\d+)/platform/:platformId(\\d+)', 
   authMiddleware, authHandler, adminHandler, 
   validators.animeId, validators.platformId, validators.createAnimePlatform,
   controllers.createAnimePlatform
 );
-router.get('/:animeId/platform/:platformId', validators.animeId, validators.platformId, controllers.getAnimePlatformDetail);
+router.get('/:animeId(\\d+)/platform/:platformId(\\d+)', validators.animeId, validators.platformId, controllers.getAnimePlatformDetail);
 router.put(
-  '/:animeId/platform/:platformId',
+  '/:animeId(\\d+)/platform/:platformId(\\d+)',
   authMiddleware, authHandler, adminHandler,
   validators.animeId, validators.platformId, validators.updateAnimePlatform,
   controllers.updateAnimePlatform
 );
 router.patch(
-  '/:animeId/platform/:platformId',
+  '/:animeId(\\d+)/platform/:platformId(\\d+)',
   authMiddleware, authHandler, adminHandler,
   validators.animeId, validators.platformId, validators.createOrUpdateAnimePlatform,
   controllers.createOrUpdateAnimePlatform
 );
 router.delete(
-  '/:animeId/platform/:platformId',
+  '/:animeId(\\d+)/platform/:platformId(\\d+)',
   authMiddleware, authHandler, adminHandler,
   validators.animeId, validators.platformId,
   controllers.deleteAnimePlatform
