@@ -1,6 +1,9 @@
 import prisma from "../utils/prisma.js";
 import customError from "../utils/customError.js";
 import dayjs from "dayjs";
+import utc from 'dayjs/plugin/utc.js';
+
+dayjs.extend(utc)
 
 // CRUD Basic Platform
 
