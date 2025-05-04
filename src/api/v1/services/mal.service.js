@@ -1,6 +1,7 @@
 import prisma from "../utils/prisma.js";
 import customError from "../utils/customError.js";
 import { getMALProfile, getMALNewAccessToken } from "../utils/mal.js";
+import { insertAnimePlatform } from "./anime.service.js";
 
 export const getMALConnection = async (userId) => {
   if (!userId) {
@@ -60,6 +61,8 @@ watching, completed, on_hold, dropped, plan_to_watch
 
 export const getAnimeList = async (user_id, q, limit, offset, fields) => {
   try {
+    fields = 'alternative_titles,start_date,num_episodes,status,' + fields
+
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
 
@@ -90,6 +93,9 @@ export const getAnimeList = async (user_id, q, limit, offset, fields) => {
       }
     };
 
+    // Get anime platform from database
+    data.data = await insertAnimePlatform(user_id, data.data)
+
     // If limit and offset exist, send next page link
     if (data.paging.next) {
       const queryParams = data.paging.next.split("?")[1];
@@ -104,6 +110,8 @@ export const getAnimeList = async (user_id, q, limit, offset, fields) => {
 
 export const getAnimeDetails = async (user_id, anime_id, fields) => {
   try {
+    fields = 'alternative_titles,start_date,num_episodes,status,' + fields
+
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
 
@@ -129,7 +137,10 @@ export const getAnimeDetails = async (user_id, anime_id, fields) => {
       }
     };
 
-    return data;
+    // Get anime platform from database
+    const animeWithPlatform = await insertAnimePlatform(user_id, [{ node: data }])
+
+    return animeWithPlatform[0];
   } catch(err) {
     console.log('Error in the getAnimeDetails service');
     throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
@@ -138,6 +149,8 @@ export const getAnimeDetails = async (user_id, anime_id, fields) => {
 
 export const getAnimeRanking = async (user_id, ranking_type, limit, offset, fields='') => {
   try {
+    fields = 'alternative_titles,start_date,num_episodes,status,' + fields
+
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
 
@@ -168,6 +181,9 @@ export const getAnimeRanking = async (user_id, ranking_type, limit, offset, fiel
       }
     };
 
+    // Get anime platform from database
+    data.data = await insertAnimePlatform(user_id, data.data)
+
     // If limit and offset exist, send next page link
     if (data.paging.next) {
       const queryParams = data.paging.next.split("?")[1];
@@ -182,6 +198,8 @@ export const getAnimeRanking = async (user_id, ranking_type, limit, offset, fiel
 
 export const getSeasonalAnime = async (user_id, year, season, sort, limit, offset, fields='') => {
   try {
+    fields = 'alternative_titles,start_date,num_episodes,status,' + fields
+
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
 
@@ -212,6 +230,9 @@ export const getSeasonalAnime = async (user_id, year, season, sort, limit, offse
       }
     };
 
+    // Get anime platform from database
+    data.data = await insertAnimePlatform(user_id, data.data)
+
     // If limit and offset exist, send next page link
     if (data.paging.next) {
       const queryParams = data.paging.next.split("?")[1];
@@ -228,6 +249,8 @@ export const getSeasonalAnime = async (user_id, year, season, sort, limit, offse
 
 export const getSuggestedAnime = async (user_id, limit, offset, fields) => {
   try {
+    fields = 'alternative_titles,start_date,num_episodes,status,' + fields
+
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
     if (!access_token) {
@@ -256,6 +279,9 @@ export const getSuggestedAnime = async (user_id, limit, offset, fields) => {
       }
     };
 
+    // Get anime platform from database
+    data.data = await insertAnimePlatform(user_id, data.data)
+
     // If limit and offset exist, send next page link
     if (data.paging.next) {
       const queryParams = data.paging.next.split("?")[1];
@@ -267,6 +293,8 @@ export const getSuggestedAnime = async (user_id, limit, offset, fields) => {
     throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
   }
 }
+
+// Doesn't have endpoint
 
 export const updateMyAnimeListStatus = async (
   user_id, anime_id, status, score, num_watched_episodes, start_date, finish_date
@@ -292,11 +320,6 @@ export const updateMyAnimeListStatus = async (
         finish_date === null ? { finish_date: '0000-00-00' } : 
         finish_date ? { finish_date } : {}
       ),
-
-      // ...(score && { score }),
-      // ...(num_watched_episodes && { num_watched_episodes }),
-      // ...(start_date && { start_date }),
-      // ...(finish_date && { finish_date }),
     });
     const response = await fetch(url, {
       method: 'PATCH',
@@ -316,8 +339,15 @@ export const updateMyAnimeListStatus = async (
     };
 
     return data;
+
+    // // Get anime platform from database
+    // const animeWithPlatform = await insertAnimePlatform(user_id, [{ node: data }])
+
+    // return animeWithPlatform[0];
   } catch(err) {
     console.log('Error in the updateMyAnimeListStatus service');
+    if (err instanceof customError) throw err;
+    if (err instanceof customError) throw err;
     throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
   }
 }
@@ -350,12 +380,15 @@ export const deleteMyAnimeListItem = async (user_id, anime_id) => {
     return data;
   } catch(err) {
     console.log('Error in the deleteMyAnimeListItem service');
+    if (err instanceof customError) throw err;
     throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
   }
 }
 
 export const getUserAnimeList = async (user_id, status, sort, limit, offset, fields) => {
   try {
+    fields = 'alternative_titles,start_date,num_episodes,status,' + fields
+
     // Get access token from MyAnimeList
     const access_token = await getMALConnection(user_id);
     if (!access_token) {
@@ -386,6 +419,9 @@ export const getUserAnimeList = async (user_id, status, sort, limit, offset, fie
       }
     };
 
+    // Get anime platform from database
+    data.data = await insertAnimePlatform(user_id, data.data)
+
     // If limit and offset exist, send next page link
     if (data.paging.next) {
       const queryParams = data.paging.next.split("?")[1];
@@ -394,9 +430,12 @@ export const getUserAnimeList = async (user_id, status, sort, limit, offset, fie
     return data;
   } catch(err) {
     console.log('Error in the getUserAnimeList service');
+    if (err instanceof customError) throw err;
     throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
   }
 }
+
+// Aborted temporally
 
 export const getMyUserInformation = async (user_id) => {
   try {
@@ -411,6 +450,7 @@ export const getMyUserInformation = async (user_id) => {
     return data;
   } catch(err) {
     console.log('Error in the getMyUserInformation service');
+    if (err instanceof customError) throw err;
     throw new customError(`${err.message || err.error}`, err.status, err.error || err);
   }
 }

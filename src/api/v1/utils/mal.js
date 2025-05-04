@@ -6,7 +6,7 @@ export const generateMALAuthUrl = () => {
     response_type: 'code',
     client_id: process.env.MAL_CLIENT_ID,
     state: process.env.MAL_STATE,
-    redirect_uri: `${process.env.BASE_URL}/mal/callback`,
+    redirect_uri: `${process.env.CLIENT_URL}/auth/mal/callback`,
     code_challenge: process.env.MAL_CODE_CHALLENGE,
     code_challenge_method: 'plain',
   });
@@ -20,7 +20,7 @@ export const getMALToken = async (code) => {
       client_id: process.env.MAL_CLIENT_ID,
       client_secret: process.env.MAL_CLIENT_SECRET,
       grant_type: 'authorization_code',
-      redirect_uri: `${process.env.BASE_URL}/mal/callback`,
+      redirect_uri: `${process.env.CLIENT_URL}/auth/mal/callback`,
       code_verifier: process.env.MAL_CODE_CHALLENGE,
       code
     });

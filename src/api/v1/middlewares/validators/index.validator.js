@@ -28,8 +28,7 @@ export const username = z
   )
 export const identifier = z
   .string()
-  .min(8, "Password must be at least 8 characters long")
-  .max(64, "Password must not exceed 64 characters")
+  .min(3, "Indentifier must be at least 3 characters long")
   .refine(
     (value) =>
       /^[a-zA-Z0-9_]+$/.test(value) || /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value),
@@ -64,6 +63,11 @@ export const id = z
   .string()
   .transform((val) => (val ? Number(val) : undefined))
   .refine((val) => (val === undefined || (Number.isInteger(val) && val >= 0)), "Positive integer number")
+export const idQ = z
+  .string()
+  .transform((val) => (val ? Number(val) : undefined))
+  .refine((val) => (val === undefined || (Number.isInteger(val) && val > 0)), "Positive integer number")
+export const idB = z.number().int().positive()
 export const ranking_type = z
   .enum(["all", "airing", "upcoming", "tv", "ova", "movie", "special", "bypopularity", "favorite"], {
     errorMap: () => ({ 
@@ -93,7 +97,7 @@ export const status = z
       message: "status must be one of: watching, completed, plan_to_watch, on_hold, or dropped"
     }),
   })
-export const score = z.number().min(0).max(10)
+export const score = z.number().int().min(0).max(10)
 export const num_watched_episodes = z.number().int().nonnegative()
 export const date = z
   .string()

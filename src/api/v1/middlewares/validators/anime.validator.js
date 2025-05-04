@@ -1,22 +1,22 @@
 import { optional, z } from "zod";
 import { 
-  validate, num_watched_episodes, q, link, dateTime, oneAnimeStatus, id, manyAnimeStatus, score, date, status, booleanB, 
-  manyStatus,
-  booleanQ,
+  validate, num_watched_episodes, q, link, dateTime, oneAnimeStatus, id, manyAnimeStatus,
   sortOrder,
-  sortByAnimeList,
   sortByAnime,
-  timeZone
+  timeZone,
+  idB
 } from './index.validator.js';
+
+// Basic CRUD Anime
 
 export const createAnime = validate(
   z.object({
-    malId: num_watched_episodes,
+    malId: idB,
     picture: link.optional(),
     title: q.optional(),
-    titleEN: q.optional(),
-    titleID: q.optional(),
-    releaseAt: dateTime.optional(),
+    titleEN: q.nullable().optional(),
+    titleID: q.nullable().optional(),
+    releaseAt: dateTime.nullable().optional(),
     episodeTotal: num_watched_episodes.optional(),
     status: oneAnimeStatus.optional()
   })
@@ -36,16 +36,29 @@ export const malId = validate(
 
 export const updateAnime = validate(
   z.object({
-    picture: link.optional(),
-    title: q.optional(),
-    titleID: q.optional(),
-    titleEN: q.optional(),
-    releaseAt: dateTime.optional(),
-    episodeTotal: num_watched_episodes.optional(),
-    status: oneAnimeStatus.optional(),
-    platformId: num_watched_episodes.optional()
+    picture: link,
+    title: q,
+    titleID: q.nullable(),
+    titleEN: q.nullable(),
+    releaseAt: dateTime.nullable(),
+    episodeTotal: num_watched_episodes,
+    status: oneAnimeStatus,
   })
 , 'body');
+
+export const updateAnimeFields = validate(
+  z.object({
+    picture: link.optional(),
+    title: q.optional(),
+    titleEN: q.nullable().optional(),
+    titleID: q.nullable().optional(),
+    releaseAt: dateTime.nullable().optional(),
+    episodeTotal: num_watched_episodes.optional(),
+    status: oneAnimeStatus.optional()
+  })
+, 'body');
+
+// Anime Get
 
 export const getAllAnime = validate(
   z.object({
@@ -64,30 +77,5 @@ export const getAnimeTimeline = validate(
   z.object({
     weekCount: id.optional(),
     timeZone: timeZone.optional(),
-  })
-, 'query')
-
-export const createOrUpdateAnimeList = validate(
-  z.object({
-    platformId: num_watched_episodes.optional(),
-    episodesDifference: num_watched_episodes.optional(), 
-    progress: num_watched_episodes.optional(), 
-    score: score.optional(), 
-    startDate: date.nullable().optional(), 
-    finishDate: date.nullable().optional(), 
-    status: status.optional(), 
-    isSyncedWithMal: booleanB.optional(),
-    timeZone: timeZone.optional(),
-  })
-, 'body')
-
-export const getAllAnimeList = validate(
-  z.object({
-    episodesDifferenceMinimum: id.optional(),
-    episodesDifferenceMaximum: id.optional(),
-    status: manyStatus.optional(),
-    isSyncedWithMal: booleanQ.optional(),
-    sortBy: sortByAnimeList.optional(),
-    sortOrder: sortOrder.optional()
   })
 , 'query')

@@ -14,7 +14,7 @@ export const verifyToken = (token) => {
     return data;
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      throw new customError("Token expired", 401);
+      throw new customError("Token expired", 400);
     } else {
       throw new customError("Authentication error", 400);
     }
