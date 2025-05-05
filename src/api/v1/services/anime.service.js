@@ -1,6 +1,6 @@
 import prisma from "../utils/prisma.js";
 import customError from "../utils/customError.js";
-import { getAnimeDetails, updateMyAnimeListStatus } from "../services/mal.service.js";
+import { getAnimeDetails, getAnimeList, updateMyAnimeListStatus } from "../services/mal.service.js";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
@@ -210,7 +210,7 @@ export const insertAnimePlatform = async (userId, listAnimeFromMAL) => {
       }
     })
 
-    return { ...listAnimeMerge };
+    return listAnimeMerge;
   } catch(err) {
     console.log('Error in the inserAnimePlatform service');
     throw err;
