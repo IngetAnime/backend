@@ -39,7 +39,7 @@ export const createAnime = async (malId, picture, title, titleID, titleEN, relea
         ),
         ...((episodeTotal === 0 || episodeTotal) && { episodeTotal }),
         ...(status && { status }),
-      },
+      }
     })
 
     return formattedAnime(anime)
@@ -59,7 +59,9 @@ export const getAnimeDetail = async (animeId, malId) => {
         ...(animeId ? { id: animeId } : { malId })
       }, 
       include: {
-        platforms: true
+        platforms: { 
+          include: { platform: true }
+        }
       }
     })
 
@@ -84,7 +86,9 @@ export const updateAnime = async (animeId, malId, picture, title, titleID, title
         picture, title, titleID, titleEN, episodeTotal, status,
         ...(releaseAt === null ? { releaseAt: null } : { releaseAt: dayjs.utc(releaseAt) }),
       }, include: {
-        platforms: true,
+        platforms: { 
+          include: { platform: true }
+        },
       }
     })
     return formattedAnime(anime)
@@ -116,8 +120,11 @@ export const updateAnimeFields = async (
         ),
         ...((episodeTotal === 0 || episodeTotal) && { episodeTotal }),
         ...(status && { status }),
-      }, include: {
-        platforms: true,
+      }, 
+      include: {
+        platforms: { 
+          include: { platform: true }
+        },
       }
     })
     return formattedAnime(anime)
@@ -137,7 +144,9 @@ export const deleteAnime = async (animeId, malId) => {
         ...(animeId ? { id: animeId } : { malId })
       }, 
       include: {
-        platforms: true
+        platforms: { 
+          include: { platform: true }
+        }
       }
     })
     return formattedAnime(anime)
@@ -181,7 +190,9 @@ export const insertAnimePlatform = async (userId, listAnimeFromMAL) => {
         malId: { in: allMalId }
       },
       include: {
-        platforms: true,
+        platforms: { 
+          include: { platform: true }
+        },
         ...(userId && {
           animeList: {
             where: { userId }
