@@ -64,7 +64,11 @@ export const createAnimeList = async (
           isSyncedWithMal === false ? { isSyncedWithMal: false } : {}
         ),
       }, include: {
-        anime: true, platform: true
+        anime: true, platform: {
+          include: {
+            platform: true
+          }
+        }
       }
     });
 
@@ -91,7 +95,11 @@ export const getAnimeListDetail = async (userId, animeId) => {
         userId_animeId: { userId, animeId } 
       },
       include: {
-        anime: true, platform: true
+        anime: true, platform: {
+          include: {
+            platform: true
+          }
+        }
       }
     })
     if (!animeList) {
@@ -119,7 +127,11 @@ export const updateAnimeList = async (
         ...(finishDate === null ? { finishDate: null } : { finishDate: dayjs.utc(finishDate) }),
         progress, score, episodesDifference, status, isSyncedWithMal
       }, include: {
-        anime: true, platform: true
+        anime: true, platform: {
+          include: {
+            platform: true
+          }
+        }
       }
     });
 
@@ -171,7 +183,11 @@ export const createOrUpdateAnimeList = async (
           ),
         },
         include: {
-          anime: true, platform: true
+          anime: true, platform: {
+            include: {
+              platform: true
+            }
+          }
         }
       });
     } catch(err) {
@@ -199,7 +215,11 @@ export const createOrUpdateAnimeList = async (
             ),
           },
           include: {
-            anime: true, platform: true
+            anime: true, platform: {
+              include: {
+                platform: true
+              }
+            }
           }
         });
       } else {
@@ -228,7 +248,11 @@ export const deleteAnimeList = async (userId, animeId) => {
         userId_animeId: { userId, animeId } 
       },
       include: {
-        anime: true, platform: true
+        anime: true, platform: {
+          include: {
+            platform: true
+          }
+        }
       }
     })
 

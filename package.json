@@ -8,6 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon app.js",
     "migrate": "prisma migrate dev --schema=src/api/v1/models/prisma/schema.prisma",
+    "create": "prisma migrate dev --schema=src/api/v1/models/prisma/schema.prisma --create-only",
     "reset": "prisma migrate reset --schema=src/api/v1/models/prisma/schema.prisma",
     "generate": "prisma generate --schema=src/api/v1/models/prisma/schema.prisma"
   },
