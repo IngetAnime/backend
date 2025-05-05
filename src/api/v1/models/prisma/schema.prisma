@@ -110,7 +110,7 @@ model Anime {
 model AnimePlatform {
   id         Int @id @default(autoincrement())
   animeId    Int @map("anime_id")
-  platformId Int @map("anime_platform_id")
+  platformId Int @map("platform_id")
 
   link                String     @unique
   accessType          AccessType @map("access_type")
