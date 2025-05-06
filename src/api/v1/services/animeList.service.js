@@ -33,6 +33,9 @@ export const formattedAnimeList = (animeList) => {
   if (animeList.finishDate) {
     animeList.finishDate = dayjs.utc(animeList.finishDate).format('YYYY-MM-DD')
   }
+  if (animeList.anime.releaseAt) {
+    animeList.anime.releaseAt = dayjs.utc(animeList.anime.releaseAt).format('YYYY-MM-DD')
+  }
   return animeList;
 }
 

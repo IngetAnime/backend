@@ -4,7 +4,8 @@ import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc.js';
 import { formattedAnimeList } from "./animeList.service.js";
 import { getUserAnimeList } from "./mal.service.js";
-import { getPlatforms } from "./platform.service.js";
+
+dayjs.extend(utc)
 
 export const getUserDetail = async (userId) => {
   try {
@@ -28,8 +29,40 @@ export const getUserDetail = async (userId) => {
   }
 }
 
-export const getAnimeList = async (userId, status) => {
+export const getAnimeList = async (userId, status, sort) => {
+  // Query normalization
   status = status ? status.split(',') : undefined;
+  switch (sort) {
+    case 'list_score':
+      sort = [
+        { score: 'desc' },
+        { anime: { title: 'asc' } }
+      ];
+      break;
+    case 'list_updated_at':
+      sort = {
+        updatedAt: 'desc'
+      }
+      break;
+    case 'anime_title':
+      sort = {
+        anime: {
+          title: 'asc'
+        }
+      }
+      break;
+    case 'anime_start_date':
+      sort = {
+        anime: {
+          releaseAt: 'desc'
+        }
+      }
+      break;
+    default:
+      sort = {}
+      break;
+  }
+  
   try {
     const animeList = await prisma.animeList.findMany({
       where: {
@@ -37,69 +70,120 @@ export const getAnimeList = async (userId, status) => {
         ...(status && {
           status: { in: status }
         })
-      }
+      },
+      include: {
+        anime: true, platform: {
+          include: { 
+            platform: true 
+          }
+        }
+      },
+      orderBy: sort
     })
 
     // Convert startDate and finishDate to YYYY-MM-DD
     animeList.map((anime) => formattedAnimeList(anime))
 
-    return { ...animeList }
+    return animeList
   } catch(err) {
     console.log('Error in the getAnimeList service');
     throw err;
   }
 }
 
-export const importAnimeList = async (userId, type) => {
+export const importAnimeList = async (userId, isSyncedWithMal, type) => {
   try {
-    let isLeft = true, limit = 100, offset = 0, animeList = [];
+    let isLeft = true, limit = 100, offset = 0, userAnimeList = [];
     while (isLeft) {
-      let animeListFromMAL = await getUserAnimeList(userId, '', undefined, limit, offset, 'my_list_status')
-      animeList.push(animeListFromMAL.data)
+      let animeListFromMAL = await getUserAnimeList(userId, undefined, undefined, limit, offset, 'my_list_status')
+      userAnimeList.push(...animeListFromMAL.data)
       if (!animeListFromMAL.paging?.next) {
         break;
       }
       offset += limit
     }
 
-    return animeList
+    let result;
+    if (type === 'skip_duplicates') {
+      result = await prisma.animeList.createMany({
+        data: userAnimeList.map(anime => {
+          return {
+            userId: userId,
+            animeId: anime.id,
+            startDate: anime.my_list_status.start_date ? dayjs.utc(anime.my_list_status.start_date) : null,
+            finishDate: anime.my_list_status.finish_date ? dayjs.utc(anime.my_list_status.finish_date) : null,
+            progress: anime.my_list_status.num_episodes_watched,
+            score: anime.my_list_status.score,
+            status: anime.my_list_status.status,
+            updatedAt: dayjs.utc(anime.my_list_status.updated_at),
+            ...(isSyncedWithMal && { isSyncedWithMal })
+          }
+        }),
+        skipDuplicates: true,
+      })
+    } else {
+      let resultLength = 0;
+      result = await Promise.all(
+        userAnimeList.map(anime => {
+          const update = {
+            userId: userId,
+            animeId: anime.id,
+            animePlatformId: anime.myListStatus?.animePlatformId,
+            startDate: anime.my_list_status.start_date ? dayjs.utc(anime.my_list_status.start_date) : null,
+            finishDate: anime.my_list_status.finish_date ? dayjs.utc(anime.my_list_status.finish_date) : null,
+            progress: anime.my_list_status.num_episodes_watched,
+            score: anime.my_list_status.score,
+            episodesDifference: anime.myListStatus?.episodesDifference,
+            status: anime.my_list_status.status,
+            updatedAt: dayjs.utc(anime.my_list_status.updated_at),
+            ...(isSyncedWithMal || isSyncedWithMal === false && { isSyncedWithMal })
+          }
+          
+          const create = {
+            userId: userId,
+            animeId: anime.id,
+            startDate: anime.my_list_status.start_date ? dayjs.utc(anime.my_list_status.start_date) : null,
+            finishDate: anime.my_list_status.finish_date ? dayjs.utc(anime.my_list_status.finish_date) : null,
+            progress: anime.my_list_status.num_episodes_watched,
+            score: anime.my_list_status.score,
+            status: anime.my_list_status.status,
+            updatedAt: dayjs.utc(anime.my_list_status.updated_at),
+            ...(isSyncedWithMal && { isSyncedWithMal })
+          }
+  
+          if (type === 'overwrite_all') {
+            resultLength += 1;
+            return prisma.animeList.upsert({
+              where: { 
+                userId_animeId: { userId, animeId: anime.id } 
+              },
+              update: update,
+              create: create,
+            })
+          } else if (type === 'latest_updated') {
+            if (!anime.myListStatus.updatedAt || dayjs(anime.my_list_status.updated_at).isAfter(dayjs(anime.myListStatus.updatedAt))) {
+              resultLength += 1
+            }
+            return prisma.animeList.upsert({
+              where: { 
+                userId_animeId: { userId, animeId: anime.id } 
+              },
+              update: {
+                ...(
+                  dayjs(anime.my_list_status.updated_at).isAfter(dayjs(anime.myListStatus.updatedAt)) && update
+                )
+              },
+              create: create,
+            })
+          }
+        })
+      )
+      result = { count: resultLength }
+    }
+
+    return { ...result };
   } catch(err) {
     console.log('Error in the importAnimeList service');
     throw err;
   }
 }
-
-// export const importAnimeList = async (userId) => {
-//   try {
-
-//   } catch(err) {
-//     console.log('Error in the importAnimeList service');
-//     throw err;
-//   }
-// }
-
-// console.log((await importAnimeList(21)));
-// console.log(await getPlatforms())
-
-// id: 4,
-// userId: 21,
-// animeId: 1,
-// animePlatformId: null,
-// startDate: 2025-04-12T17:00:00.000Z,
-// finishDate: 2025-07-12T17:00:00.000Z,
-// progress: 4,
-// score: 8,
-// episodesDifference: 0,
-// status: 'on_hold',
-// isSyncedWithMal: true,
-// updatedAt: 2025-04-12T22:49:15.025Z
-
-// my_list_status: {
-//   status: 'completed',
-//   score: 7,
-//   num_episodes_watched: 13,
-//   is_rewatching: false,
-//   updated_at: '2024-07-17T00:13:20+00:00',
-//   start_date: '2024-01-06',
-//   finish_date: '2024-03-30'
-// }

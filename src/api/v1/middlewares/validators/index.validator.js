@@ -160,7 +160,7 @@ export const manyAnimeStatus = z
 export const booleanB = z.boolean()
 export const booleanQ = z
   .enum(["true", "false"], {
-    errorMap: () => ({ message: "boolena value, must be one of: true or false" })
+    errorMap: () => ({ message: "boolean value, must be one of: true or false" })
   })
 export const manyStatus = z
   .string()
@@ -193,6 +193,17 @@ export const timeZone = z
     { message: "Invalid time zone", }
   )
   
+// User
+export const type = z
+  .enum(["skip_duplicates", "overwrite_all", "latest_updated"], {
+    errorMap: () => ({ message: "sortBy must be one of: skip_duplicates, overwrite_all, or latest_updated" })
+  })
+
+export const sortAnimeList = z
+  .enum(["list_score", "list_updated_at", "anime_title", "anime_start_date"], {
+    errorMap: () => ({ message: "sortBy must be one of: list_score, list_updated_at, anime_title, or anime_start_date" })
+  })
+
   
 export const validate = (schema, payload) => (req, res, next) => {
   try {
