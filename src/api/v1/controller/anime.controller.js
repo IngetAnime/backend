@@ -65,6 +65,18 @@ export const deleteAnime = async (req, res, next) => {
 
 // Anime Get
 
+export const getAnimeTimeline = async (req, res, next) => {
+  try {
+    const userId = req.user ? req.user.id : undefined;
+    const { weekCount, timeZone, myListOnly, originalSchedule } = req.query;
+    const data = await services.getAnimeTimeline(userId, weekCount, timeZone, myListOnly, originalSchedule);
+    res.status(200).json(data);
+  } catch(err) {
+    console.log("Error in the getAnimeTimeline controller");
+    next(err);
+  }
+}
+
 export const getAllAnime = async (req, res, next) => {
   try {
     const { title, releaseAtStart, releaseAtEnd, episodeTotalMinimum, episodeTotalMaximum, status } = req.query;
@@ -74,18 +86,6 @@ export const getAllAnime = async (req, res, next) => {
     res.status(200).json({ ...data });
   } catch(err) {
     console.log("Error in the getAllAnime controller");
-    next(err);
-  }
-}
-
-export const getAnimeTimeline = async (req, res, next) => {
-  try {
-    const userId = req.user ? req.user.id : undefined;
-    const { weekCount, timeZone } = req.query;
-    const data = await services.getAnimeTimeline(userId, weekCount, timeZone);
-    res.status(200).json({ ...data });
-  } catch(err) {
-    console.log("Error in the getAnimeTimeline controller");
     next(err);
   }
 }

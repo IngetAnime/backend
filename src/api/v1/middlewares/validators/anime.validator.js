@@ -4,7 +4,8 @@ import {
   sortOrder,
   sortByAnime,
   timeZone,
-  idB
+  idB,
+  booleanQ
 } from './index.validator.js';
 
 // Basic CRUD Anime
@@ -60,22 +61,11 @@ export const updateAnimeFields = validate(
 
 // Anime Get
 
-export const getAllAnime = validate(
-  z.object({
-    title: q.optional(),
-    releaseAtStart: dateTime.optional(),
-    releaseAtEnd: dateTime.optional(),
-    episodeTotalMinimum: id.optional(),
-    episodeTotalMaximum: id.optional(),
-    status: manyAnimeStatus.optional(),
-    sortBy: sortByAnime.optional(),
-    sortOrder: sortOrder.optional()
-  })
-, 'query')
-
 export const getAnimeTimeline = validate(
   z.object({
     weekCount: id.optional(),
     timeZone: timeZone.optional(),
+    myListOnly: booleanQ.optional(),
+    originalSchedule: booleanQ.optional()
   })
 , 'query')

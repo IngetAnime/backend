@@ -6,7 +6,7 @@ import { authMiddleware, authHandler, adminHandler, optAuthMiddleware } from "..
 const router = e.Router()
 
 router.post('/', authMiddleware, authHandler, adminHandler, validators.createAnime, controllers.createAnime);
-// router.get('/timeline', optAuthMiddleware, validators.getAnimeTimeline, controllers.getAnimeTimeline);
+router.get('/timeline', optAuthMiddleware, validators.getAnimeTimeline, controllers.getAnimeTimeline);
 router.get('/:animeId(\\d+)', validators.animeId, controllers.getAnimeDetail);
 router.put(
   '/:animeId(\\d+)', 
