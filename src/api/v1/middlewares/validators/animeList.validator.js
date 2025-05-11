@@ -1,12 +1,6 @@
 import { z } from "zod";
 import { 
-  validate, num_watched_episodes, q, link, dateTime, oneAnimeStatus, id, manyAnimeStatus, score, date, status, booleanB, 
-  manyStatus,
-  booleanQ,
-  sortOrder,
-  sortByAnimeList,
-  sortByAnime,
-  timeZone,
+  validate, num_watched_episodes, score, date, status, booleanB, 
   idQ,
   idB
 } from './index.validator.js';

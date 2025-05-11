@@ -208,7 +208,7 @@ export const insertAnimePlatform = async (userId, listAnimeFromMAL) => {
     // Merge animeFromDatabase and animeFromMAL
     const listAnimeMerge =  listAnimeFromMAL.map((anime) => {
       let databaseAnime = animeMap.get(anime.node.id);
-      if (databaseAnime.animeList.length) {
+      if (databaseAnime.animeList?.length) {
         databaseAnime.myListStatus = databaseAnime.animeList[0]
       } else {
         databaseAnime.myListStatus = {}
@@ -223,7 +223,7 @@ export const insertAnimePlatform = async (userId, listAnimeFromMAL) => {
 
     return listAnimeMerge;
   } catch(err) {
-    console.log('Error in the inserAnimePlatform service');
+    console.log('Error in the inserAnimePlatform service', err);
     throw err;
   }
 }

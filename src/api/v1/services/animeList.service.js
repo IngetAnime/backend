@@ -9,13 +9,9 @@ dayjs.extend(utc)
 const updateToMAL = async (animeList) => {
   let startDate = animeList.startDate ? dayjs.utc(animeList.startDate).format('YYYY-MM-DD')  : animeList.startDate;
   let finishDate = animeList.finishDate ? dayjs.utc(animeList.finishDate).format('YYYY-MM-DD')  : animeList.finishDate;
-  try {
-    await updateMyAnimeListStatus(
-      animeList.userId, animeList.anime.malId, animeList.status, animeList.score, animeList.progress, startDate, finishDate
-    )
-  } catch(err) {
-    console.log(err.message);
-  }
+  await updateMyAnimeListStatus(
+    animeList.userId, animeList.anime.malId, animeList.status, animeList.score, animeList.progress, startDate, finishDate
+  )
 }
 
 const deleteFromMAL = async (animeList) => {

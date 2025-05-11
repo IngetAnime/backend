@@ -260,46 +260,28 @@ export const deleteAnimeScheduleById = async (id) => {
 export const platformScheduler = () => {
   cron.schedule('* * * * *', async () => {
     // Check on queue schedule
-    const schedules = await prisma.platformSchedule.findMany({
+    const animePlatform = await prisma.animePlatform.findMany({
       where: {
-        AND: [
-          { isUpdated: false },
-          { updateOn: { lte: dayjs().toISOString() } }
-        ]
-      }, orderBy: {
-        episodeNumber: 'asc',
+        nextEpisodeAiringAt: { lte: dayjs().toISOString() }
+      }, 
+      orderBy: {
+        nextEpisodeAiringAt: 'asc'
       }
-    });
+    })
 
-    if (schedules.length > 0) {
-      schedules.forEach(async (schedule) => {
-        // Next episode schedule
-        const { updateOn } = await prisma.platformSchedule.findUnique({
-          where: {
-            platformId_episodeNumber: {
-              platformId: schedule.platformId,
-              episodeNumber: schedule.episodeNumber + 1
-            }
-          }
-        });
-
+    if (animePlatform.length > 0) {
+      animePlatform.forEach(async (platform) => {
         // Update platform lastEpisodeAiredAt and nextEpisodeAiringAt 
-        await prisma.platform.update({
-          where: { id: schedule.platformId },
+        await prisma.animePlatform.update({
+          where: { id: platform.id },
           data: {
-            episodeAired: schedule.episodeNumber,
-            lastEpisodeAiredAt: dayjs(schedule.updateOn).toISOString(),
-            ...(updateOn && { nextEpisodeAiringAt: dayjs(updateOn).toISOString() })
+            episodeAired: platform.episodeAired + 1,
+            lastEpisodeAiredAt: dayjs(platform.nextEpisodeAiringAt).toISOString(),
+            nextEpisodeAiringAt: dayjs(platform.nextEpisodeAiringAt).add(platform.intervalInDays, 'day').toISOString()
           }
         })
 
-        // Set schedule to already updated
-        await prisma.platformSchedule.update({
-          where: { id: schedule.id },
-          data: { isUpdated: true }
-        })
-
-        console.log(`Platform with id ${schedule.platformId} updated!`);
+        console.log(`Platform with id ${platform.id} updated!`);
       })
     }
   })

@@ -290,6 +290,7 @@ export const getSuggestedAnime = async (user_id, limit, offset, fields) => {
     return data;
   } catch(err) {
     console.log('Error in the getSuggestedAnime service');
+    if (err instanceof customError) throw err;
     throw new customError(`Error response from MyAnimeList: ${err.message || err.error}`, err.status, err.error || err);
   }
 }
