@@ -115,11 +115,11 @@ export const createOrUpdateAnimePlatform = async (req, res, next) => {
     const platformId = parseInt(req.params.platformId);
     const { 
       link, accessType, nextEpisodeAiringAt, 
-      lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform 
+      lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform, isHiatus
     } = req.body;
     const { statusCode, data } = await services.createOrUpdateAnimePlatform(
       animeId, platformId, link, accessType, nextEpisodeAiringAt, 
-      lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform
+      lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform, isHiatus
     );
     res.status(statusCode).json(data);
   } catch(err) {

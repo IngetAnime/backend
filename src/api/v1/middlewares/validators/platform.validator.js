@@ -60,5 +60,6 @@ export const createOrUpdateAnimePlatform = validate(
     intervalInDays: idB.optional(), 
     episodeAired: num_watched_episodes.optional(), 
     isMainPlatform: booleanB.optional(),
+    isHiatus: booleanB.optional(),
   })
 , 'body');

@@ -262,22 +262,32 @@ export const platformScheduler = () => {
     // Check on queue schedule
     const animePlatform = await prisma.animePlatform.findMany({
       where: {
+        isHiatus: false,
         nextEpisodeAiringAt: { lte: dayjs().toISOString() }
       }, 
       orderBy: {
         nextEpisodeAiringAt: 'asc'
+      },
+      include: { 
+        anime: true 
       }
     })
 
     if (animePlatform.length > 0) {
       animePlatform.forEach(async (platform) => {
+        let lastEpisodeAiredAt = dayjs(platform.nextEpisodeAiringAt).toISOString();
+        let nextEpisodeAiringAt = dayjs(platform.nextEpisodeAiringAt).add(platform.intervalInDays, 'day').toISOString();
+        let isHiatus = false;
+        if (platform.anime.episodeTotal === (platform.episodeAired + 1)) { // If current episode is last episode
+          nextEpisodeAiringAt = lastEpisodeAiredAt;
+          isHiatus = true;
+        }
+
         // Update platform lastEpisodeAiredAt and nextEpisodeAiringAt 
         await prisma.animePlatform.update({
           where: { id: platform.id },
           data: {
-            episodeAired: platform.episodeAired + 1,
-            lastEpisodeAiredAt: dayjs(platform.nextEpisodeAiringAt).toISOString(),
-            nextEpisodeAiringAt: dayjs(platform.nextEpisodeAiringAt).add(platform.intervalInDays, 'day').toISOString()
+            episodeAired: platform.episodeAired + 1, lastEpisodeAiredAt, nextEpisodeAiringAt, isHiatus
           }
         })
 

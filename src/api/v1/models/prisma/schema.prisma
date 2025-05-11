@@ -97,7 +97,6 @@ model Anime {
   titleEN      String?     @map("title_en")
   releaseAt    DateTime?   @map("release_at")
   episodeTotal Int         @default(0) @map("episode_total")
-  isHitatus    Boolean     @default(false) @map("is_hiatus")
   status       AnimeStatus @default(not_yet_aired)
 
   platforms      AnimePlatform[]
@@ -119,6 +118,7 @@ model AnimePlatform {
   intervalInDays      Int        @default(7) @map("interval_in_days")
   episodeAired        Int        @default(0) @map("episode_aired")
   isMainPlatform      Boolean    @default(false) @map("is_main_platform")
+  isHiatus            Boolean    @default(false) @map("is_hiatus")
 
   anime     Anime       @relation(fields: [animeId], references: [id], onDelete: Cascade)
   platform  Platform    @relation(fields: [platformId], references: [id], onDelete: Cascade)

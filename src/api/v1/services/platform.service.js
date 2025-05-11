@@ -176,7 +176,7 @@ export const updateAnimePlatform = async (
 
 export const createOrUpdateAnimePlatform = async (
   animeId, platformId, link, accessType, nextEpisodeAiringAt, 
-  lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform
+  lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform, isHiatus
 ) => {
   try {
     lastEpisodeAiredAt = lastEpisodeAiredAt ? dayjs(lastEpisodeAiredAt).toISOString() : lastEpisodeAiredAt
@@ -198,6 +198,7 @@ export const createOrUpdateAnimePlatform = async (
           ...(intervalInDays && { intervalInDays }),
           ...((episodeAired || episodeAired === 0) && { episodeAired }),
           ...((isMainPlatform || isMainPlatform === false) && { isMainPlatform }),
+          ...((isHiatus || isHiatus === false) && { isHiatus }),
         },
         include: {
           anime: true, platform: true
@@ -216,6 +217,7 @@ export const createOrUpdateAnimePlatform = async (
             ...(intervalInDays && { intervalInDays }),
             ...(episodeAired && { episodeAired }),
             ...(isMainPlatform && { isMainPlatform }),
+            ...(isHiatus && { isHiatus }),
           },
           include: {
             anime: true, platform: true
