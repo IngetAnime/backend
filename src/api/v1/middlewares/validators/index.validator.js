@@ -200,8 +200,10 @@ export const type = z
   })
 
 export const sortAnimeList = z
-  .enum(["list_score", "list_updated_at", "anime_title", "anime_start_date"], {
-    errorMap: () => ({ message: "sortBy must be one of: list_score, list_updated_at, anime_title, or anime_start_date" })
+  .enum(["list_score", "list_updated_at", "anime_title", "anime_start_date", "remaining_watchable_episodes"], {
+    errorMap: () => ({ 
+      message: "sortBy must be one of: list_score, list_updated_at, anime_title, anime_start_date, remaining_watchable_episodes" 
+    })
   })
 
   

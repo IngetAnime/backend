@@ -59,12 +59,16 @@ export const getAnimeList = async (userId, status, sort) => {
       }
       break;
     default:
-      sort = {}
+      sort = {
+        anime: {
+          id: 'asc'
+        }
+      }
       break;
   }
   
   try {
-    const animeList = await prisma.animeList.findMany({
+    let animeList = await prisma.animeList.findMany({
       where: {
         userId, 
         ...(status && {
@@ -72,7 +76,15 @@ export const getAnimeList = async (userId, status, sort) => {
         })
       },
       include: {
-        anime: true, platform: {
+        anime: {
+          include: {
+            platforms: {
+              orderBy: { isMainPlatform: 'desc' },
+              include: { platform: true }
+            }
+          }
+        },
+        platform: {
           include: { 
             platform: true 
           }
@@ -81,10 +93,23 @@ export const getAnimeList = async (userId, status, sort) => {
       orderBy: sort
     })
 
-    // Convert startDate and finishDate to YYYY-MM-DD
-    animeList.map((anime) => formattedAnimeList(anime))
+    animeList = animeList.map((list) => {
+      const episodeAired = 
+        list.platform?.episodeAired || 
+        list.anime.platforms[0]?.episodeAired || 
+        (list.anime.status === 'finished_airing' ? list.anime.episodeTotal : null);
+      const remainingWatchableEpisodes = episodeAired ? (episodeAired - list.progress) : null;
+      return {
+        ...formattedAnimeList(list), // Convert startDate and finishDate to YYYY-MM-DD
+        remainingWatchableEpisodes,
+      }
+    });
 
-    return animeList
+    if (!animeList.length) {
+      throw new customError(`User anime list not found`, 404);
+    }
+
+    return animeList;
   } catch(err) {
     console.log('Error in the getAnimeList service');
     throw err;
