@@ -69,7 +69,7 @@ export const getAnimeTimeline = async (req, res, next) => {
   try {
     const userId = req.user ? req.user.id : undefined;
     const { weekCount, timeZone, myListOnly, originalSchedule } = req.query;
-    const data = await services.getAnimeTimeline(userId, weekCount, timeZone, myListOnly, originalSchedule);
+    const data = await services.getAnimeTimeline(userId, weekCount, timeZone, JSON.parse(myListOnly), JSON.parse(originalSchedule));
     res.status(200).json(data);
   } catch(err) {
     console.log("Error in the getAnimeTimeline controller");

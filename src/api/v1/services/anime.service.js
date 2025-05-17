@@ -232,15 +232,15 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
   try {
     const now = dayjs().toISOString();
     const localDate = dayjs(now).tz(timeZone);
-    const startDate = localDate.subtract(3 * weekCount, 'day').startOf('day').toISOString();
-    const endDate = localDate.add(3 * weekCount, 'day').endOf('day').toISOString();
+    const startDate = localDate.subtract(3 * weekCount, 'day').startOf('day');
+    const endDate = localDate.add(3 * weekCount, 'day').endOf('day');
 
     let anime = await prisma.anime.findMany({
       where: {
         platforms: {
           some: { OR : [
-            { lastEpisodeAiredAt: { gte: startDate, lte: endDate } }, 
-            { nextEpisodeAiringAt: { gte: startDate, lte: endDate } }
+            { lastEpisodeAiredAt: { gte: startDate.toISOString(), lte: endDate.toISOString() } }, 
+            { nextEpisodeAiringAt: { gte: startDate.toISOString(), lte: endDate.toISOString() } }
           ]},
         }
       },
@@ -316,7 +316,56 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
 
     // return { ...timelineBeforeToday, ...timelineAfterToday }
     const timeline = timelineBeforeToday.concat(timelineAfterToday)
-    return timeline;
+
+    // Create daily schedule
+    let dailyTimeline = Array.from({ length: 32 }, () => ({ dateTime: null, timelines: [] }));
+    timeline.forEach(anime => {
+      const dateTime = dayjs(anime.schedule.dateTime).tz(timeZone);
+      const day = parseInt(dateTime.date());
+      const hour = parseInt(dateTime.hour());
+      const minute = parseInt(dateTime.minute());
+
+      if (!dailyTimeline[day].dateTime) {
+        dailyTimeline[day].dateTime = dateTime.startOf('day');
+      }
+
+      const index = dailyTimeline[day].timelines.findIndex(timeline => {
+        if (!timeline.dateTime) return false;
+        const dateTimeline = dayjs(timeline.dateTime).tz(timeZone);
+        const hourTimeline = dateTimeline.hour();
+        const minuteTimeline = dateTimeline.minute();
+        if ((hourTimeline === hour) && (minuteTimeline === minute)) return true;
+        return false;
+      })
+
+      if (index !== -1) {
+        dailyTimeline[day].timelines[index].data.push(anime);
+      } else {
+        dailyTimeline[day].timelines.push({
+          dateTime: dateTime,
+          data: [ anime ]
+        })
+      }
+    })
+
+    dailyTimeline = dailyTimeline
+      .filter(day => day.dateTime)
+      .sort((a,b) => {
+        return dayjs(a.dateTime).diff(dayjs(b.dateTime));
+      })
+    
+    Array(weekCount * 7).fill(0).forEach((_, i) => {
+      const date = startDate.add(i, 'day');
+      let index = dailyTimeline.findIndex(timeline => dayjs(timeline.dateTime).isSame(date, 'day'));
+      if (index === -1) {
+        index = dailyTimeline.findIndex(timeline => dayjs(timeline.dateTime).isAfter(date), 'day');
+        dailyTimeline.splice(index, 0, {
+          dateTime: date,
+          data: []
+        })
+      }
+    })
+    return dailyTimeline;
   } catch(err) {
     console.log('Error in the getAnimeTimeline service', err);
     throw err;
