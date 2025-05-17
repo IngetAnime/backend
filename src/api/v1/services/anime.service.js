@@ -238,24 +238,28 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
     let anime = await prisma.anime.findMany({
       where: {
         platforms: {
-          some: { OR : [
-            { lastEpisodeAiredAt: { gte: startDate.toISOString(), lte: endDate.toISOString() } }, 
-            { nextEpisodeAiringAt: { gte: startDate.toISOString(), lte: endDate.toISOString() } }
-          ]},
+          some: { 
+            OR : [
+              { lastEpisodeAiredAt: { gte: startDate.toISOString(), lte: endDate.toISOString() } }, 
+              { nextEpisodeAiringAt: { gte: startDate.toISOString(), lte: endDate.toISOString() } }
+            ],
+            isHiatus: false
+          },
         }
       },
       include : {
         platforms: {
+          include: {
+            platform: true
+          },
           orderBy: {
             isMainPlatform: 'desc'
           }
         },
-        ...(userId && {
-          animeList: {
-            where: { userId },
-            include: { platform: true }
-          }
-        })
+        animeList: {
+          ...(userId ? { where: { userId } } : { where: { userId: 0 } }),
+          include: { platform: true }
+        }
       }
     });
 
