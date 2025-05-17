@@ -361,7 +361,7 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
         index = dailyTimeline.findIndex(timeline => dayjs(timeline.dateTime).isAfter(date), 'day');
         dailyTimeline.splice(index, 0, {
           dateTime: date,
-          data: []
+          timelines: []
         })
       }
     })
