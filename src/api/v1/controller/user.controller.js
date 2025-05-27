@@ -34,3 +34,37 @@ export const importAnimeList = async (req, res, next) => {
     next(err);
   }
 }
+
+export const checkEmailAvailability = async (req, res, next) => {
+  try {
+    const { email } = req.query;
+    const data = await services.checkEmailAvailability(email);
+    res.status(200).json(data);
+  } catch(err) {
+    console.log('Error in the checkEmailAvailability controller');
+    next(err);
+  }
+}
+
+export const checkUsernameAvailability = async (req, res, next) => {
+  try {
+    const { username } = req.query;
+    const data = await services.checkUsernameAvailability(username);
+    res.status(200).json(data);
+  } catch(err) {
+    console.log('Error in the checkUsernameAvailability controller');
+    next(err);
+  }
+}
+
+export const updateUserDetail = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id);
+    const { username, email } = req.body;
+    const data = await services.updateUserDetail(userId, username, email);
+    res.status(200).json(data);
+  } catch(err) {
+    console.log('Error in the updateUserDetail controller');
+    next(err);
+  }
+}

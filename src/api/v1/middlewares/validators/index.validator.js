@@ -36,6 +36,7 @@ export const identifier = z
       message: "Identifier must be a valid email or username",
     }
   )
+export const code = z.string().min(1, "Authorization code is required")
 
 // MyAnimeList
 export const q = z

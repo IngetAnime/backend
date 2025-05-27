@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { validate, email, password, username, identifier, confirmPassword } from './index.validator.js';
+import { validate, email, password, username, identifier, confirmPassword, code, link } from './index.validator.js';
 
 export const register = validate(
   z.object({
@@ -38,6 +38,6 @@ export const resetPassword = validate(
 
 export const codeValidator = validate(
   z.object({
-    code: z.string().min(1, "Authorization code is required"),
+    code,
   })
 , 'body');

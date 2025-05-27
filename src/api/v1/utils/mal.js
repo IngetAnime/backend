@@ -1,26 +1,26 @@
 import customError from '../utils/customError.js';
 
-export const generateMALAuthUrl = () => {
+export const generateMALAuthUrl = (mode) => {
   const url = new URL('https://myanimelist.net/v1/oauth2/authorize');
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: process.env.MAL_CLIENT_ID,
     state: process.env.MAL_STATE,
-    redirect_uri: `${process.env.CLIENT_URL}/auth/mal/callback`,
+    redirect_uri: `${process.env.CLIENT_URL}/auth/mal/callback${mode ? `?mode=${mode}`: ''}`,
     code_challenge: process.env.MAL_CODE_CHALLENGE,
     code_challenge_method: 'plain',
   });
   return `${url}?${params.toString()}`;
 };
 
-export const getMALToken = async (code) => {
+export const getMALToken = async (code, mode) => {
   try {
     const url = 'https://myanimelist.net/v1/oauth2/token';
     const params = new URLSearchParams({
       client_id: process.env.MAL_CLIENT_ID,
       client_secret: process.env.MAL_CLIENT_SECRET,
       grant_type: 'authorization_code',
-      redirect_uri: `${process.env.CLIENT_URL}/auth/mal/callback`,
+      redirect_uri: `${process.env.CLIENT_URL}/auth/mal/callback${mode ? `?mode=${mode}`: ''}`,
       code_verifier: process.env.MAL_CODE_CHALLENGE,
       code
     });

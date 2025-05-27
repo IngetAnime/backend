@@ -8,5 +8,8 @@ const router = e.Router()
 router.get('/@me/my-list-status', authMiddleware, authHandler, validators.getAnimeList, controllers.getAnimeList);
 router.post('/@me/import-list-mal', authMiddleware, authHandler, validators.importAnimeList, controllers.importAnimeList);
 router.get('/@me', authMiddleware, authHandler, controllers.getUserDetail);
+router.post('/@me', authMiddleware, authHandler, validators.updateUserDetail, controllers.updateUserDetail);
+router.get('/check/email', validators.checkEmail, controllers.checkEmailAvailability);
+router.get('/check/username', validators.checkUsername, controllers.checkUsernameAvailability);
 
 export default router;

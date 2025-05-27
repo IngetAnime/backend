@@ -3,7 +3,9 @@ import customError from "../utils/customError.js";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc.js';
 import { formattedAnimeList } from "./animeList.service.js";
-import { getUserAnimeList } from "./mal.service.js";
+import { getMyUserInformation, getUserAnimeList } from "./mal.service.js";
+import { generateRandom } from "../utils/random.js";
+import { sendEmailVerification } from "../utils/mailer.js";
 
 dayjs.extend(utc)
 
@@ -15,13 +17,25 @@ export const getUserDetail = async (userId) => {
     if (!user) {
       throw new customError('User not found', 404);
     }
+
+    // Get MyAnimeList information
+    let myAnimeList;
+    try {
+      myAnimeList = await getMyUserInformation(user.id);
+    } catch(err) {
+      console.log('Account not connected to MyAnimeList');
+    }
+    
     return { 
       id: user.id, 
       email: user.email, 
       username: user.username, 
       isVerified: user.isVerifed, 
-      role: user.role,
+      role: user.role, 
+      ...(user.malId && { malId: user.malId }), 
+      ...(user.googleId && { googleId: user.googleId }), 
       ...(user.picture && { picture: user.picture }), 
+      ...(myAnimeList && { myAnimeList })
     };
   } catch(err) {
     console.log('Error in the getUserDetail service');
@@ -209,6 +223,71 @@ export const importAnimeList = async (userId, isSyncedWithMal, type) => {
     return { ...result };
   } catch(err) {
     console.log('Error in the importAnimeList service');
+    throw err;
+  }
+}
+
+export const checkEmailAvailability = async (email) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    })
+    if (user) {
+      throw new customError('Email already in use', 409);
+    }
+    return { message: 'Email available' }
+  } catch(err) {
+    console.log('Error in the checkEmailAvailability service');
+    throw err;    
+  }
+}
+
+export const checkUsernameAvailability = async (username) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username }
+    })
+    if (user) {
+      throw new customError('Username already in use', 409);
+    }
+    return { message: 'Username available' }
+  } catch(err) {
+    console.log('Error in the checkUsernameAvailability service');
+    throw err;    
+  }
+}
+
+export const updateUserDetail = async (userId, username, email) => {
+  try {
+    let user = await prisma.user.update({
+      where: { id: userId },
+      data: { username, email }
+    });
+
+    // If email change reverified user
+    if (!user.googleId || !user.malId) {
+      const otpCode = generateRandom(6, 'numeric');
+      const otpExpiration = dayjs().add(10, "minute").toISOString();
+      user = await prisma.user.update({
+        where: { id: userId },
+        data: { isVerifed: false, otpCode, otpExpiration }
+      });
+      await sendEmailVerification(user.email, user.otpCode);
+    };
+    
+    return { 
+      id: user.id, 
+      email: user.email, 
+      username: user.username, 
+      isVerifed: user.isVerifed
+    };
+  } catch(err) {
+    console.log('Error in the updateUserDetail service');
+    if (err.code === 'P2002') {
+      const field = err.meta.target[0];
+      const capitalizedField = field.charAt(0).toUpperCase() + field.slice(1);
+      throw new customError(`${capitalizedField} already in use`, 409);
+    }
     throw err;
   }
 }

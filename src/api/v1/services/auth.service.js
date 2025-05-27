@@ -218,11 +218,7 @@ export const loginWithGoogle = async (code) => {
     let user = await prisma.user.findUnique({ where: { email } });
     let statusCode = 200;
     if (user) { 
-      if (user.googleId === id) { // If email found and already connect to google
-        return { ...getUserData(user), statusCode };
-      }
-
-      // If email found, but not connect to google  
+      // If email found, either connected to google or not
       user = await prisma.user.update({ 
         where: { id: user.id },
         data: { 

@@ -5,6 +5,8 @@ import {
   type,
   booleanB,
   sortAnimeList,
+  email,
+  username,
 } from './index.validator.js';
 
 export const getAnimeList = validate(
@@ -18,5 +20,24 @@ export const importAnimeList = validate(
   z.object({
     isSyncedWithMAL: booleanB.optional(),
     type: type
+  })
+, 'body');
+
+export const checkEmail = validate(
+  z.object({
+    email
+  })
+, 'query');
+
+export const checkUsername = validate(
+  z.object({
+    username
+  })
+, 'query');
+
+export const updateUserDetail = validate(
+  z.object({
+    username: username.optional(), 
+    email: email.optional()
   })
 , 'body');
