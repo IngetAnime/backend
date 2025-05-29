@@ -369,7 +369,7 @@ export const connectToMAL = async (userId, code) => {
     let myAnimeList = await getMALProfile(access_token);
 
     // Connect user to MAL
-    const user = await prisma.user.update({ 
+    let user = await prisma.user.update({ 
       where: { id: userId },
       data: {
         malAccessToken: access_token,
@@ -378,6 +378,16 @@ export const connectToMAL = async (userId, code) => {
         isVerifed: true
       }
     });
+
+    // Update picture if null
+    if (!user.picture) {
+      user = await prisma.user.update({ 
+        where: { id: userId },
+        data: {
+          picture: myAnimeList.picture
+        }
+      });
+    }
 
     return { ...getUserData(user), myAnimeList }
   } catch(err) {
