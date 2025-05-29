@@ -1,8 +1,10 @@
 import * as services from '../services/auth.service.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration.js';
+import customError from '../utils/customError.js';
 import { generateGoogleAuthUrl } from '../utils/google.js';
 import { generateMALAuthUrl } from '../utils/mal.js';
+import { generateRandom } from '../utils/random.js';
 
 dayjs.extend(duration);
 
@@ -103,7 +105,14 @@ export const resetPassword = async (req, res, next) => {
 
 export const getGoogleAuthUrl = async (req, res, next) => {
   try {
-    const authorizationUrl = generateGoogleAuthUrl();
+    const { mode } = req.query;
+    const randomStr = generateRandom(24, 'alphanumeric');
+
+    const stateObject = { mode: mode || 'login', state: randomStr };
+    const stateEncoded = Buffer.from(JSON.stringify(stateObject)).toString('base64');
+    req.session.state = randomStr;
+
+    const authorizationUrl = generateGoogleAuthUrl(stateEncoded);
     res.status(200).json({ authorizationUrl });
   } catch(err) {
     console.log("Error in the getGoogleAuthUrl controller");
@@ -113,10 +122,24 @@ export const getGoogleAuthUrl = async (req, res, next) => {
 
 export const loginWithGoogle = async (req, res, next) => {
   try {
-    const { code } = req.body;
-    const { token, statusCode, ...data } = await services.loginWithGoogle(code);
-    setAuthCookie(res, token)
-    res.status(statusCode).json(data);
+    const { code, state } = req.body;
+    const userId = req.user ? parseInt(req.user.id) : undefined;
+
+    const stateDedoced = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+    if (!stateDedoced.state || stateDedoced.state !== req.session.state) {
+      throw new customError('Invalid state. CSRF detected', 400);
+    }
+
+    if (stateDedoced.mode === 'login') {
+      const { token, statusCode, ...data } = await services.loginWithGoogle(code);
+      setAuthCookie(res, token)
+      res.status(statusCode).json(data);
+    } else if (stateDedoced.mode === 'connect') {
+      const data = await services.connectToGoogle(userId, code);
+      res.status(200).json(data);
+    } else {
+      throw new customError('Unknown mode in state', 400);
+    }
   } catch(err) {
     console.log("Error in the loginWithGoogle controller");
     next(err);
@@ -125,7 +148,14 @@ export const loginWithGoogle = async (req, res, next) => {
 
 export const getMALAuthUrl = async (req, res, next) => {
   try {
-    const authorizationUrl = generateMALAuthUrl();
+    const { mode } = req.query;
+    const randomStr = generateRandom(24, 'alphanumeric');
+
+    const stateObject = { mode: mode || 'login', state: randomStr };
+    const stateEncoded = Buffer.from(JSON.stringify(stateObject)).toString('base64');
+    req.session.state = randomStr;
+
+    const authorizationUrl = generateMALAuthUrl(stateEncoded);
     res.status(200).json({ authorizationUrl });
   } catch(err) {
     console.log("Error in the getMALAuthUrl controller");
@@ -135,10 +165,24 @@ export const getMALAuthUrl = async (req, res, next) => {
 
 export const loginWithMAL = async (req, res, next) => {
   try {
-    const { code } = req.body;
-    const { token, statusCode, ...data } = await services.loginWithMAL(code);
-    setAuthCookie(res, token)
-    res.status(statusCode).json(data);
+    const { code, state } = req.body;
+    const userId = req.user ? parseInt(req.user.id) : undefined;
+
+    const stateDedoced = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+    if (!stateDedoced.state || stateDedoced.state !== req.session.state) {
+      throw new customError('Invalid state. CSRF detected', 400);
+    }
+    
+    if (stateDedoced.mode === 'login') {
+      const { token, statusCode, ...data } = await services.loginWithMAL(code);
+      setAuthCookie(res, token)
+      res.status(statusCode).json(data);
+    } else if (stateDedoced.mode === 'connect') {
+      const data = await services.connectToMAL(userId, code);
+      res.status(200).json(data);
+    } else {
+      throw new customError('Unknown mode in state', 400);
+    }
   } catch(err) {
     console.log("Error in the loginWithMAL controller");
     next(err);

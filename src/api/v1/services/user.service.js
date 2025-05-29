@@ -34,6 +34,7 @@ export const getUserDetail = async (userId) => {
       role: user.role, 
       ...(user.malId && { malId: user.malId }), 
       ...(user.googleId && { googleId: user.googleId }), 
+      ...(user.googleEmail && { googleEmail: user.googleEmail }), 
       ...(user.picture && { picture: user.picture }), 
       ...(myAnimeList && { myAnimeList })
     };

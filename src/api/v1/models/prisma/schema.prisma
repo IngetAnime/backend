@@ -54,6 +54,7 @@ model User {
   isVerifed     Boolean  @default(false) @map("is_verified")
 
   googleId        String? @unique @map("google_id")
+  googleEmail     String? @unique @map("google_email")
   malId           String? @unique @map("mal_id")
   malAccessToken  String? @unique @map("mal_access_token")
   malRefreshToken String? @unique @map("mal_refresh_token")

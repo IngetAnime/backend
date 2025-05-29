@@ -215,7 +215,8 @@ export const loginWithGoogle = async (code) => {
     await setCredential(access_token, refresh_token, expiry_date);
     const { id, email, picture } = await getGoogleInfo();
 
-    let user = await prisma.user.findUnique({ where: { email } });
+    let user = await prisma.user.findUnique({ where: { googleId: id.toString() }});
+    if (!user) user = await prisma.user.findUnique({ where: { email }});
     let statusCode = 200;
     if (user) { 
       // If email found, either connected to google or not
@@ -223,6 +224,8 @@ export const loginWithGoogle = async (code) => {
         where: { id: user.id },
         data: { 
           googleId: id,
+          googleEmail: email,
+          ...(!user.password && email && { email }),
           ...(!user.picture && picture && { picture })
         }
       })
@@ -247,7 +250,7 @@ export const loginWithGoogle = async (code) => {
     user = await prisma.user.create({
       data: { 
         username, email, otpCode, otpExpiration, isVerifed: true, // account without password
-        googleId: id, ...(picture && { picture })
+        googleId: id, googleEmail: email, ...(picture && { picture })
       }
     });
 
@@ -256,6 +259,47 @@ export const loginWithGoogle = async (code) => {
     console.log("Error in the loginWithGoogle service");
     if (err.code === "P2025") {
       throw new customError('Invalid token or account', 400);
+    }
+    throw err;
+  }
+}
+
+export const connectToGoogle = async (userId, code) => {
+  try {
+    if (!userId) {
+      throw new customError('Logged in user only', 401)
+    }
+
+    // Get information from Google
+    const { access_token, refresh_token, expiry_date } = await getGoogleToken(code);
+    await setCredential(access_token, refresh_token, expiry_date);
+    const { id, email, picture } = await getGoogleInfo();
+
+    // Find user
+    let user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    if (!user) {
+      throw new customError('User not found or no permission to update', 403);
+    }
+
+    // Connect user to google
+    user = await prisma.user.update({ 
+      where: { id: userId },
+      data: {
+        isVerifed: true,
+        googleId: id.toString(),
+        googleEmail: email,
+        ...(!user.password && email && { email }),
+        ...(!user.picture && picture && { picture })
+      }
+    });
+
+    return { ...getUserData(user), googleId: user.googleId, googleEmail: email }
+  } catch(err) {
+    console.log("Error in the connectToGoogle service");
+    if (err.code === 'P2002' && err.meta?.target?.includes('google_id')) {
+      throw new customError('This Google account is already connected to another user', 409);
     }
     throw err;
   }
@@ -309,6 +353,39 @@ export const loginWithMAL = async (code) => {
     console.log("Error in the loginWithMAL service", err);
     if (err.code === "P2025") {
       throw new customError('Invalid token or account', 400);
+    }
+    throw err;
+  }
+}
+
+export const connectToMAL = async (userId, code) => {
+  try {
+    if (!userId) {
+      throw new customError('Logged in user only', 401)
+    }
+
+    // Get information fro MAL
+    const { access_token, refresh_token } = await getMALToken(code);
+    let myAnimeList = await getMALProfile(access_token);
+
+    // Connect user to MAL
+    const user = await prisma.user.update({ 
+      where: { id: userId },
+      data: {
+        malAccessToken: access_token,
+        malRefreshToken: refresh_token,
+        malId: myAnimeList.id.toString(),
+        isVerifed: true
+      }
+    });
+
+    return { ...getUserData(user), myAnimeList }
+  } catch(err) {
+    console.log("Error in the connectToMAL service");
+    if (err.code === 'P2002' && err.meta?.target?.includes('mal_id')) {
+      throw new customError('This MyAnimeList account is already connected to another user', 409);
+    } else if (err.code === 'P2025') {
+      throw new customError('User not found or no permission to update', 403);
     }
     throw err;
   }

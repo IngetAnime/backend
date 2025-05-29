@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { validate, email, password, username, identifier, confirmPassword, code, link } from './index.validator.js';
+import { validate, email, password, username, identifier, confirmPassword, code, link, mode, q } from './index.validator.js';
 
 export const register = validate(
   z.object({
@@ -36,8 +36,15 @@ export const resetPassword = validate(
   })
 , 'body');
 
-export const codeValidator = validate(
+export const generateAuth = validate(
+  z.object({
+    mode: mode.optional()
+  })
+, 'query');
+
+export const loginOrConnect = validate(
   z.object({
     code,
+    state: q
   })
 , 'body');

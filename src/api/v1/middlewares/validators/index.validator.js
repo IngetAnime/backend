@@ -37,6 +37,12 @@ export const identifier = z
     }
   )
 export const code = z.string().min(1, "Authorization code is required")
+export const mode = z
+  .enum(["login", "connect"], {
+    errorMap: () => ({ 
+      message: "mode must be one of: login or connect"
+    })
+  })
 
 // MyAnimeList
 export const q = z

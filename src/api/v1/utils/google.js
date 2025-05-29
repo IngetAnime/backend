@@ -7,7 +7,7 @@ const oauth2Client = new google.auth.OAuth2(
   `${process.env.CLIENT_URL}/auth/google/callback`,
 )
 
-export const generateGoogleAuthUrl = () => {
+export const generateGoogleAuthUrl = (state) => {
   const scopes = [
     // 'https://www.googleapis.com/auth/user.birthday.read',
     // 'https://www.googleapis.com/auth/user.gender.read',
@@ -19,7 +19,8 @@ export const generateGoogleAuthUrl = () => {
     access_type: 'offline',
     scope: scopes,
     include_granted_scopes: true,
-    prompt: 'consent'
+    prompt: 'consent',
+    state: state
   });
 
   return authorizationUrl;
