@@ -8,7 +8,6 @@ import errorHandler from "./src/api/v1/middlewares/errorHandler.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from 'path';
-import session from "express-session";
 import { platformScheduler } from "./src/api/v1/services/schedule.service.js";
 
 dotenv.config();
@@ -32,17 +31,6 @@ app.use(express.urlencoded({ extended: true })); // Content-Type:application/x-w
 // Http-Only Cookie setup
 app.use(cookieParser());
 app.use(cors({ origin: allowedOrigins, credentials: true }));
-
-// Session setup
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-  }
-}));
 
 // Enabling logging
 if (process.env.NODE_ENV === 'production') {
