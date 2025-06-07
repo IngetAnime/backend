@@ -34,7 +34,7 @@ export const sendEmailVerification = async (email, otp) => {
   const emailTemplatePath = path.resolve(`${mailPath}/emailVerification.ejs`);
   const resetLink = `${process.env.CLIENT_URL}/auth/email-verification?token=${getToken({ email, otp, type: 'email_verification' }, '10m')}`
   const htmlContent = await ejs.renderFile(emailTemplatePath, { resetLink });
-  sendEmail(email, 'Email Verification', htmlContent);
+  sendEmail(email, 'IngetAnime', htmlContent);
 }
 
 export const sendResetPassword = async (email, otp) => {
@@ -47,5 +47,5 @@ export const sendResetPassword = async (email, otp) => {
 export const sendOTP = async (email, otp) => {
   const emailTemplatePath = path.resolve(`${mailPath}/otpRegister.ejs`);
   const htmlContent = await ejs.renderFile(emailTemplatePath, { otp });
-  sendEmail(email, 'Email Verification', htmlContent);
+  sendEmail(email, 'IngetAnime', htmlContent);
 }
