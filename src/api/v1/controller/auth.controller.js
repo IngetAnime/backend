@@ -17,6 +17,15 @@ export const setAuthCookie = (res, token) => {
   });
 };
 
+export const setStateCookie = (res, randomStr) => {
+  res.cookie('state', randomStr, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    maxAge: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
 export const register = async (req, res, next) => {
   try {
     const { email, password, username } = req.body;
@@ -110,7 +119,7 @@ export const getGoogleAuthUrl = async (req, res, next) => {
 
     const stateObject = { mode: mode || 'login', state: randomStr };
     const stateEncoded = Buffer.from(JSON.stringify(stateObject)).toString('base64');
-    req.session.state = randomStr;
+    setStateCookie(res, randomStr);
 
     const authorizationUrl = generateGoogleAuthUrl(stateEncoded);
     res.status(200).json({ authorizationUrl });
@@ -125,16 +134,18 @@ export const loginWithGoogle = async (req, res, next) => {
     const { code, state } = req.body;
     const userId = req.user ? parseInt(req.user.id) : undefined;
 
-    const stateDedoced = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
-    if (!stateDedoced.state || stateDedoced.state !== req.session.state) {
+    const stateDecoded = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+    const cookieState = req.cookies.state;
+    if (!stateDecoded.state || stateDecoded.state !== cookieState) {
       throw new customError('Invalid state. CSRF detected', 400);
     }
+    res.clearCookie('state');
 
-    if (stateDedoced.mode === 'login') {
+    if (stateDecoded.mode === 'login') {
       const { token, statusCode, ...data } = await services.loginWithGoogle(code);
       setAuthCookie(res, token)
       res.status(statusCode).json(data);
-    } else if (stateDedoced.mode === 'connect') {
+    } else if (stateDecoded.mode === 'connect') {
       const data = await services.connectToGoogle(userId, code);
       res.status(200).json(data);
     } else {
@@ -153,7 +164,7 @@ export const getMALAuthUrl = async (req, res, next) => {
 
     const stateObject = { mode: mode || 'login', state: randomStr };
     const stateEncoded = Buffer.from(JSON.stringify(stateObject)).toString('base64');
-    req.session.state = randomStr;
+    setStateCookie(res, randomStr);
 
     const authorizationUrl = generateMALAuthUrl(stateEncoded);
     res.status(200).json({ authorizationUrl });
@@ -168,16 +179,18 @@ export const loginWithMAL = async (req, res, next) => {
     const { code, state } = req.body;
     const userId = req.user ? parseInt(req.user.id) : undefined;
 
-    const stateDedoced = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
-    if (!stateDedoced.state || stateDedoced.state !== req.session.state) {
+    const stateDecoded = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+    const cookieState = req.cookies.state;
+    if (!stateDecoded.state || stateDecoded.state !== cookieState) {
       throw new customError('Invalid state. CSRF detected', 400);
     }
+    res.clearCookie('state');
     
-    if (stateDedoced.mode === 'login') {
+    if (stateDecoded.mode === 'login') {
       const { token, statusCode, ...data } = await services.loginWithMAL(code);
       setAuthCookie(res, token)
       res.status(statusCode).json(data);
-    } else if (stateDedoced.mode === 'connect') {
+    } else if (stateDecoded.mode === 'connect') {
       const data = await services.connectToMAL(userId, code);
       res.status(200).json(data);
     } else {
