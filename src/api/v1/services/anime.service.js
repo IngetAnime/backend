@@ -245,7 +245,14 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
             ],
             isHiatus: false
           },
-        }
+        },
+        ...(myListOnly && {
+          animeList: {
+            some: {
+              userId
+            }
+          }
+        })
       },
       include : {
         platforms: {
@@ -270,9 +277,7 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
       if (animeList[0]?.platform && !originalSchedule) { // If user anime list has platform
         platform = animeList[0].platform
       } else { // If not, use default main platform
-        if (!myListOnly) {
-          platform = animes.platforms[0]
-        }
+        platform = animes.platforms[0]
       }
 
       delete animeList[0]?.platform; // Delete because already moved to let platform
@@ -358,17 +363,26 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
         return dayjs(a.dateTime).diff(dayjs(b.dateTime));
       })
     
-    Array(weekCount * 7).fill(0).forEach((_, i) => {
-      const date = startDate.add(i, 'day');
-      let index = dailyTimeline.findIndex(timeline => dayjs(timeline.dateTime).isSame(date, 'day'));
-      if (index === -1) {
-        index = dailyTimeline.findIndex(timeline => dayjs(timeline.dateTime).isAfter(date), 'day');
-        dailyTimeline.splice(index, 0, {
-          dateTime: date,
-          timelines: []
-        })
-      }
-    })
+    // Fill blank timeline (if no anime schedule)
+    Array(weekCount * 7).fill(0)
+      .forEach((_, i) => {
+        const date = startDate.add(i, 'day');
+        let index = dailyTimeline.findIndex(timeline => dayjs(timeline.dateTime).isSame(date, 'day'));
+        if (index === -1) {
+          index = dailyTimeline.findIndex(timeline => dayjs(timeline.dateTime).isAfter(date), 'day');
+          dailyTimeline.splice(index, 0, {
+            dateTime: date,
+            timelines: []
+          })
+        }
+      })
+    
+    // Sort again for blank timeline
+    dailyTimeline = dailyTimeline
+      .sort((a,b) => {
+        return dayjs(a.dateTime).diff(dayjs(b.dateTime));
+      })
+
     return dailyTimeline;
   } catch(err) {
     console.log('Error in the getAnimeTimeline service', err);
