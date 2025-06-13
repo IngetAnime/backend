@@ -176,7 +176,7 @@ export const importAnimeList = async (userId, isSyncedWithMal, type) => {
             episodesDifference: anime.myListStatus?.episodesDifference,
             status: anime.my_list_status.status,
             updatedAt: dayjs.utc(anime.my_list_status.updated_at),
-            ...(isSyncedWithMal || isSyncedWithMal === false && { isSyncedWithMal })
+            ...((isSyncedWithMal || (isSyncedWithMal === false)) && { isSyncedWithMal })
           }
           
           const create = {

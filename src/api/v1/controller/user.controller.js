@@ -26,8 +26,8 @@ export const getAnimeList = async (req, res, next) => {
 export const importAnimeList = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id);
-    const { isSyncedWithMAL, type } = req.body;
-    const data = await services.importAnimeList(userId, isSyncedWithMAL, type);
+    const { isSyncedWithMal, type } = req.body;
+    const data = await services.importAnimeList(userId, isSyncedWithMal, type);
     res.status(200).json(data);
   } catch(err) {
     console.log('Error in the importAnimeList controller');

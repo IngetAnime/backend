@@ -18,7 +18,7 @@ export const getAnimeList = validate(
 
 export const importAnimeList = validate(
   z.object({
-    isSyncedWithMAL: booleanB.optional(),
+    isSyncedWithMal: booleanB.optional(),
     type: type
   })
 , 'body');
