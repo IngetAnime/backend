@@ -212,6 +212,24 @@ export const insertAnimePlatform = async (userId, listAnimeFromMAL) => {
       });
     }
 
+    // Filter main platform (between user selected platform and default platform)
+    listAnimeFromDatabase = listAnimeFromDatabase.map((anime) => {
+      let { animeList } = anime
+      let platform;
+      if (animeList[0]?.platform) { // If user anime list has platform
+        platform = animeList[0].platform
+      } else { // If not, use default main platform
+        platform = anime.platforms[0]
+      }
+
+      delete animeList[0]?.platform; // Delete because already moved to let platform
+
+      return {
+        ...anime,
+        selectedPlatform: platform,
+      }
+    });
+
     // Create indexing map based on malId
     const animeMap = new Map(
       listAnimeFromDatabase.map((anime) => [anime.malId, anime])
