@@ -171,7 +171,7 @@ export const insertAnimePlatform = async (userId, listAnimeFromMAL) => {
       data: listAnimeFromMAL.map((anime) => {
         return {
           malId: anime.node.id,
-          picture: anime.node.main_picture.large, 
+          picture: anime.node.main_picture ? anime.node.main_picture.large : 'https://ik.imagekit.io/hq9ajk99t/_Pngtree_no%20image%20vector%20illustration%20isolated_4979075.png?updatedAt=1749865837127', 
           title: anime.node.title, 
           titleEN: anime.node.alternative_titles?.en || null, 
           releaseAt: anime.node.start_date ? dayjs.utc(anime.node.start_date) : null, 
