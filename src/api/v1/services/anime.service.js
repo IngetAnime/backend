@@ -216,13 +216,15 @@ export const insertAnimePlatform = async (userId, listAnimeFromMAL) => {
     listAnimeFromDatabase = listAnimeFromDatabase.map((anime) => {
       let { animeList } = anime
       let platform;
-      if (animeList[0]?.platform) { // If user anime list has platform
+      if (animeList && animeList[0]?.platform) { // If user anime list has platform
         platform = animeList[0].platform
       } else { // If not, use default main platform
         platform = anime.platforms[0]
       }
 
-      delete animeList[0]?.platform; // Delete because already moved to let platform
+      if (animeList) {
+        delete animeList[0]?.platform; // Delete because already moved to let platform
+      }
 
       return {
         ...anime,
