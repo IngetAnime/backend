@@ -277,7 +277,7 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
             isHiatus: false
           },
         },
-        ...(myListOnly && {
+        ...((myListOnly && userId) && {
           animeList: {
             some: {
               userId
@@ -295,7 +295,7 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
           }
         },
         animeList: {
-          ...(userId ? { where: { userId } } : { where: { userId: 0 } }),
+          ...(userId ? { where: { userId } } : { where: { userId: 0 } }), // 0 for animeList null
           include: { platform: true }
         }
       }
