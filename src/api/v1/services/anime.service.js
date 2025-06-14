@@ -201,6 +201,17 @@ export const insertAnimePlatform = async (userId, listAnimeFromMAL) => {
       }
     });
 
+    // Sort anime platform based on isMainPlatform and platform id
+    for (const anime of listAnimeFromDatabase) {
+      anime.platforms.sort((a, b) => {
+        if (a.isMainPlatform !== b.isMainPlatform) {
+          return Number(b.isMainPlatform) - Number(a.isMainPlatform);
+        }
+        
+        return a.platform.id - b.platform.id;
+      });
+    }
+
     // Create indexing map based on malId
     const animeMap = new Map(
       listAnimeFromDatabase.map((anime) => [anime.malId, anime])
