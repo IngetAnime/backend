@@ -274,7 +274,6 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
               { lastEpisodeAiredAt: { gte: startDate.toISOString(), lte: endDate.toISOString() } }, 
               { nextEpisodeAiringAt: { gte: startDate.toISOString(), lte: endDate.toISOString() } }
             ],
-            isHiatus: false
           },
         },
         ...((myListOnly && userId) && {
