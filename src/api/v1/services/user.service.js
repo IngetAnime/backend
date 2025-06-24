@@ -114,6 +114,13 @@ export const getAnimeList = async (userId, status, sort) => {
         list.anime.platforms[0]?.episodeAired || 
         (list.anime.status === 'finished_airing' ? list.anime.episodeTotal : null);
       const remainingWatchableEpisodes = episodeAired ? (episodeAired - list.progress) : null;
+
+      if (list.platform) { // If user anime list has platform
+        list.anime.selectedPlatform = list.platform;
+      } else { // If not, use default main platform
+        list.anime.selectedPlatform = list.anime.platforms[0];
+      }
+
       return {
         ...formattedAnimeList(list), // Convert startDate and finishDate to YYYY-MM-DD
         remainingWatchableEpisodes,
