@@ -281,6 +281,15 @@ export const platformScheduler = () => {
         if (platform.anime.episodeTotal === (platform.episodeAired + 1)) { // If current episode is last episode
           nextEpisodeAiringAt = lastEpisodeAiredAt;
           isHiatus = true;
+
+          if (platform.anime.status === 'currently_airing') { // Set to finish if still airing
+            await prisma.anime.update({
+              where: { id: platform.animeId },
+              data: {
+                status: 'finished_airing'
+              }
+            })
+          }
         }
 
         // Update platform lastEpisodeAiredAt and nextEpisodeAiringAt 
@@ -290,6 +299,16 @@ export const platformScheduler = () => {
             episodeAired: platform.episodeAired + 1, lastEpisodeAiredAt, nextEpisodeAiringAt, isHiatus
           }
         })
+
+        // Update anime to currently_airing if first airing
+        if ((platform.episodeAired === 0) && platform.anime.status === 'not_yet_aired') {
+          await prisma.anime.update({
+            where: { id: platform.animeId },
+            data: {
+              status: 'currently_airing'
+            }
+          })
+        }
 
         console.log(`Platform with id ${platform.id} updated!`);
       })
