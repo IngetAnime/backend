@@ -394,7 +394,7 @@ export const getAnimeTimeline = async (userId, weekCount=1, timeZone='Asia/Jakar
       })
     
     // Fill blank timeline (if no anime schedule)
-    Array(weekCount * 7).fill(0)
+    Array(1 + 2 * weekCount * 3).fill(0)
       .forEach((_, i) => {
         const date = startDate.add(i, 'day');
         let index = dailyTimeline.findIndex(timeline => dayjs(timeline.dateTime).isSame(date, 'day'));
