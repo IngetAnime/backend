@@ -274,14 +274,17 @@ export const platformScheduler = () => {
     })
 
     if (animePlatform.length > 0) {
-      animePlatform.forEach(async (platform) => {
+      for (const platform of animePlatform) {
+        const startTime = Date.now();
+
         let lastEpisodeAiredAt = dayjs(platform.nextEpisodeAiringAt).toISOString();
         let nextEpisodeAiringAt = dayjs(platform.nextEpisodeAiringAt).add(platform.intervalInDays, 'day').toISOString();
         let isHiatus = false;
+
         if (platform.anime.episodeTotal === (platform.episodeAired + 1)) { // If current episode is last episode
           nextEpisodeAiringAt = lastEpisodeAiredAt;
           isHiatus = true;
-
+  
           if (platform.anime.status === 'currently_airing') { // Set to finish if still airing
             await prisma.anime.update({
               where: { id: platform.animeId },
@@ -291,7 +294,7 @@ export const platformScheduler = () => {
             })
           }
         }
-
+        
         // Update platform lastEpisodeAiredAt and nextEpisodeAiringAt 
         await prisma.animePlatform.update({
           where: { id: platform.id },
@@ -310,8 +313,9 @@ export const platformScheduler = () => {
           })
         }
 
-        console.log(`Platform with id ${platform.id} updated!`);
-      })
+        const elapsed = Date.now() - startTime;
+        console.log(`Platform with id ${platform.id} updated! in ${elapsed} ms`);
+      }
     }
   })
 }
