@@ -8,7 +8,7 @@ import errorHandler from "./src/api/v1/middlewares/errorHandler.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from 'path';
-import { platformScheduler } from "./src/api/v1/services/schedule.service.js";
+import { bstationTimelineScheduler, platformScheduler } from "./src/api/v1/services/schedule.service.js";
 
 dotenv.config();
 
@@ -17,6 +17,7 @@ const server = createServer(app);
 
 // CRON Jobs
 platformScheduler();
+// bstationTimelineScheduler();
 
 // Setting-up cors origin
 const allowedOrigins = [

@@ -1,259 +1,14 @@
 import cron from 'node-cron';
-import dayjs from 'dayjs';
 import prisma from '../utils/prisma.js';
-import customError from '../utils/customError.js'
+import customError from '../utils/customError.js';
+import { getTimeline as getBstationTimeline } from '../utils/bstation.js';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+import { sendBstationScheduleReport } from '../utils/mailer.js';
 
-// CRUD Platform Scheduler
-
-export const createOrUpdatePlatformSchedule = async (platformId, episodeNumber, updateOn) => {
-  try {
-    let schedule;
-    let statusCode = 200;
-    const schedulerBefore = await prisma.platformSchedule.findUnique({
-      where: {
-        platformId_episodeNumber: {
-          platformId, episodeNumber: episodeNumber - 1
-        }
-      }
-    })
-    const schedulerAfter = await prisma.platformSchedule.findUnique({
-      where: {
-        platformId_episodeNumber: {
-          platformId, episodeNumber: episodeNumber + 1
-        }
-      }
-    })
-    if (schedulerBefore &&  dayjs(schedulerBefore.updateOn).isAfter(updateOn)) {
-      throw new customError(
-        `Update date ${updateOn} cannot be earlier than the previous episode on ${schedulerBefore.updateOn}`, 400
-      )
-    } else if (schedulerAfter && dayjs(schedulerAfter.updateOn).isBefore(updateOn)) {
-      throw new customError(
-        `Update date ${updateOn} cannot be later than the next episode on ${schedulerAfter.updateOn}`, 400
-      )
-    } else if (!schedulerBefore && !schedulerAfter && episodeNumber !== 1) {
-      throw new customError('Previous or next episode schedule must exist', 400)
-    }
-
-    try {
-      schedule = await prisma.platformSchedule.update({
-        where: { 
-          platformId_episodeNumber: {
-            platformId, episodeNumber
-          }
-        },
-        data: {
-          updateOn: dayjs(updateOn).toISOString(),
-        },
-        include: { 
-          platform: { 
-            include: { anime: true }
-          }
-        }
-      });
-    } catch(err) {
-      if (err.code === "P2025") {
-        statusCode = 201;
-        schedule = await prisma.platformSchedule.create({
-          data: { platformId, episodeNumber, updateOn: dayjs(updateOn).toISOString() },
-          include: { 
-            platform: { 
-              include: { anime: true }
-            }
-          }
-        });
-      } else {
-        throw err;
-      }
-    }
-
-    if (schedule.platformId === schedule.platform.anime.platformId) { // Current platform same as anime main platform
-      if (schedule.episodeNumber === 1) { 
-        // If first episode, create currently_airing anime schedule
-        await createOrUpdateAnimeSchedule(schedule.platform.animeId, 'currently_airing', schedule.updateOn)
-      } else if(schedule.episodeNumber === schedule.platform.anime.episodeTotal) { 
-        // If last episode, create finished_airing anime schedule
-        await createOrUpdateAnimeSchedule(schedule.platform.animeId, 'finished_airing', schedule.updateOn)
-      }
-    }
-
-    return { statusCode, ...schedule };
-  } catch(err) {
-    console.log('Error in the createOrUpdatePlatformSchedule service', err);
-    if (err.code === "P2003") {
-      throw new customError("Platform not found", 404);
-    }
-    throw err;
-  }
-}
-
-export const getPlatformSchedule = async (platformId) => {
-  try {
-    const schedule = await prisma.platformSchedule.findMany({
-      where: { platformId },
-      include: { 
-        platform: { 
-          include: { anime: true }
-        }
-      }
-    })
-    if (!schedule) {
-      throw new customError('Platform schedule not found', 404);
-    }
-    return { ...schedule }
-  } catch(err) {
-    console.log('Error in the getPlatformSchedule service', err);
-    throw err;
-  }
-}
-
-export const getPlatformScheduleById = async (id) => {
-  try {
-    const schedule = await prisma.platformSchedule.findUnique({
-      where: { id: id },
-      include: { 
-        platform: { 
-          include: { anime: true }
-        }
-      }
-    })
-    if (!schedule) {
-      throw new customError('Platform schedule not found', 404);
-    }
-    return { ...schedule };
-  } catch(err) {
-    console.log('Error in the getPlatformScheduleById service', err);
-    throw err;
-  }
-}
-
-export const deletePlatformScheduleById = async (id) => {
-  try {
-    const schedule = await prisma.platformSchedule.delete({
-      where: { id },
-      include: { 
-        platform: { 
-          include: { anime: true }
-        }
-      }
-    })
-    return { ...schedule }
-  } catch(err) {
-    if (err.code === "P2025") {
-      throw new customError("Platform schedule not found", 404);
-    }
-    console.log('Error in the deletePlatformScheduleById service', err);
-    throw err;
-  }
-}
-
-// CRUD Anime Scheduler
-
-export const createOrUpdateAnimeSchedule = async (animeId, status, updateOn) => {
-  try {
-    let schedule;
-    let statusCode = 200;
-    try {
-      schedule = await prisma.animeSchedule.update({
-        where: { 
-          animeId_status: {
-            animeId, status
-          }
-        },
-        data: {
-          updateOn: dayjs(updateOn).toISOString(),
-        },
-        include: {
-          anime: { 
-            include: { mainPlatform: true }
-          }
-        }
-      });
-    } catch(err) {
-      if (err.code === "P2025") {
-        statusCode = 201;
-        schedule = await prisma.animeSchedule.create({
-          data: { animeId, status, updateOn: dayjs(updateOn).toISOString() },
-          include: { 
-            anime: { 
-              include: { mainPlatform: true }
-            }
-          }
-        });
-      } else {
-        throw err;
-      }
-    }
-
-    return { statusCode, ...schedule };
-  } catch(err) {
-    console.log('Error in the createOrUpdateAnimeSchedule service', err);
-    if (err.code === "P2003") {
-      throw new customError("Anime not found", 404);
-    }
-    throw err;
-  }
-}
-
-export const getAnimeSchedule = async (animeId) => {
-  try {
-    const schedule = await prisma.animeSchedule.findMany({
-      where: { animeId },
-      include: { 
-        anime: { 
-          include: { mainPlatform: true }
-        }
-      }
-    })
-    if (!schedule) {
-      throw new customError('Anime schedule not found', 404);
-    }
-    return { ...schedule }
-  } catch(err) {
-    console.log('Error in the getAnimeSchedule service', err);
-    throw err;
-  }
-}
-
-export const getAnimeScheduleById = async (id) => {
-  try {
-    const schedule = await prisma.animeSchedule.findUnique({
-      where: { id },
-      include: { 
-        anime: { 
-          include: { mainPlatform: true }
-        }
-      }
-    })
-    if (!schedule) {
-      throw new customError('Anime schedule not found', 404);
-    }
-    return { ...schedule };
-  } catch(err) {
-    console.log('Error in the getAnimeScheduleById service', err);
-    throw err;
-  }
-}
-
-export const deleteAnimeScheduleById = async (id) => {
-  try {
-    const schedule = await prisma.animeSchedule.delete({
-      where: { id },
-      include: { 
-        anime: { 
-          include: { mainPlatform: true }
-        }
-      }
-    })
-    return { ...schedule }
-  } catch(err) {
-    console.log('Error in the deleteAnimeScheduleById service', err);
-    if (err.code === "P2025") {
-      throw new customError("Anime schedule not found", 404);
-    }
-    throw err;
-  }
-}
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // CRON Scheduler
 
@@ -320,38 +75,96 @@ export const platformScheduler = () => {
   })
 }
 
-export const animeScheduler = () => {
-  // Check on queue schedule
-  cron.schedule('* * * * *', async () => {
-    const schedules = await prisma.animeSchedule.findMany({
-      where: {
-        AND: [
-          { isUpdated: false },
-          { updateOn: { lte: dayjs().toISOString() } }
-        ]
-      }, orderBy: {
-        status: 'asc',
-      }
-    });
+export const bstationTimelineScheduler = async (timeZone='Asia/Jakarta') => {
+  cron.schedule('0 0 * * *', async () => {
+    const BSTATION_ID = 1;
+    const TODAY = dayjs();
+    const NEXT_WEEK = dayjs().tz(timeZone).add(7, 'day').startOf('day');
 
-    if (schedules.length > 0) {
-      schedules.forEach(async (schedule) => {
-        // Update anime status
-        await prisma.anime.update({
-          where: { id: schedule.animeId },
-          data: {
-            status: schedule.status
+    const allScrape = await getBstationTimeline();
+    const upcomingScrape = allScrape.filter(item => dayjs(item.releaseAt).isAfter(TODAY));
+    const mapToLink = new Map(upcomingScrape.map(d => [d.link, { ...d }]))
+
+    const animePlatform = await prisma.animePlatform.findMany({
+      where: {
+        platformId: BSTATION_ID,
+        OR: [
+          { nextEpisodeAiringAt: null },
+          { nextEpisodeAiringAt: { gte: TODAY } }
+        ]
+      }
+    })
+
+    let updatedPlatforms = [];
+    for (const platform of animePlatform) {
+      const dataScrape = mapToLink.get(platform.link);
+
+      // If on Bstation timeline exist, but null on database
+      if (dataScrape && (platform.nextEpisodeAiringAt === null)) {
+        const data = await prisma.animePlatform.update({
+          where: { id: platform.id },
+          data: { nextEpisodeAiringAt: dayjs(dataScrape.releaseAt).toISOString() },
+          include: {
+            anime: {
+              select: { title: true, picture: true }
+            }
           }
         })
 
-        // Set schedule to already updated
-        await prisma.animeSchedule.update({
-          where: { id: schedule.id },
-          data: { isUpdated: true }
-        })
+        updatedPlatforms.push({
+          title: data.anime.title,
+          picture: data.anime.picture,
+          episodeNumber: dataScrape.episodeNumber,
+          newDate: dataScrape.releaseAt,
+          type: 'Added'
+        });
+      } 
+      
+      // If on bstation timeline exist, but different than database
+      else if ( dataScrape && !(dayjs(platform.nextEpisodeAiringAt).isSame(dayjs(dataScrape.releaseAt))) ) {
+        const data = await prisma.animePlatform.update({
+          where: { id: platform.id },
+          data: { nextEpisodeAiringAt: dayjs(dataScrape.releaseAt).toISOString() },
+          include: {
+            anime: {
+              select: { title: true, picture: true }
+            }
+          }
+        });
 
-        console.log(`Anime with id ${schedule.animeId} updated!`);
-      })
+        updatedPlatforms.push({
+          title: data.anime.title,
+          picture: data.anime.picture,
+          episodeNumber: dataScrape.episodeNumber,
+          newDate: dataScrape.releaseAt,
+          type: 'Updated'
+        });
+      } 
+      
+      // If on bstation timeline not exist, but exist on database (only on bstation timeline range - next 6 days)
+      else if ( !dataScrape && dayjs(platform.nextEpisodeAiringAt).isBefore(NEXT_WEEK) ) {
+        const data = await prisma.animePlatform.update({
+          where: { id: platform.id },
+          data: { nextEpisodeAiringAt: null },
+          include: {
+            anime: {
+              select: { title: true, picture: true }
+            }
+          }
+        });
+
+        updatedPlatforms.push({
+          title: data.anime.title,
+          picture: data.anime.picture,
+          episodeNumber: platform.episodeAired + 1,
+          newDate: null,
+          type: 'Removed'
+        });
+      }
     }
+
+    await sendBstationScheduleReport(process.env.MAILER_USER, updatedPlatforms);
+  }, {
+    timezone: timeZone
   })
 }

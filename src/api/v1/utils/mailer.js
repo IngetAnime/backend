@@ -49,3 +49,9 @@ export const sendOTP = async (email, otp) => {
   const htmlContent = await ejs.renderFile(emailTemplatePath, { otp });
   sendEmail(email, 'IngetAnime', htmlContent);
 }
+
+export const sendBstationScheduleReport = async (email, updatedPlatforms) => {
+  const emailTemplatePath = path.resolve(`${mailPath}/bstationScheduleReport.ejs`);
+  const htmlContent = await ejs.renderFile(emailTemplatePath, { updatedPlatforms });
+  sendEmail(email, 'Daily Bstation Schedule Report', htmlContent);
+}

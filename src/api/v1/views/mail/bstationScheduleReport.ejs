@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
+      .header {
+        text-align: center;
+        color: #333;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+      }
+      .content {
+        padding: 20px 0;
+        color: #555;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        min-width: 500px;
+        border-collapse: collapse;
+      }
+      th, td {
+        padding: 10px;
+        border: 1px solid #eee;
+        text-align: center;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      .footer {
+        padding-top: 20px;
+        text-align: center;
+        font-size: 12px;
+        color: #aaa;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>Bstation Scheduler Report</h2>
+      </div>
+
+      <div class="content">
+        <p>Hello, here is the latest update report:</p>
+        <% if (updatedPlatforms.length === 0) { %>
+          <p>No updates today 🎉</p>
+        <% } else { %>
+          <table>
+            <tr>
+              <th>Anime</th>
+              <th>Type</th>
+              <th>Episode</th>
+              <th>New Date</th>
+            </tr>
+            <% updatedPlatforms.forEach(update => { %>
+              <tr>
+                <td style="display: flex; align-items: center; gap: 10px;">
+                  <% if (update.picture) { %>
+                    <img src="<%= update.picture %>" alt="<%= update.title %>" width="50" height="70" style="object-fit: cover; border-radius: 4px;" />
+                  <% } %>
+                  <span><%= update.title %></span>
+                </td>
+                <td><%= update.type %></td>
+                <td><%= update.episodeNumber %></td>
+                <td><%= update.newDate || '-' %></td>
+              </tr>
+            <% }) %>
+          </table>
+          <p>Don't forget to check updates on other platforms too</p>
+        <% } %>
+      </div>
+
+      <div class="footer">
+        <p>&copy; <%= new Date().getFullYear() %> IngetAnime. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
