@@ -101,8 +101,9 @@ export const createAnimePlatform = async (
     }
     const animePlatform = await prisma.animePlatform.create({
       data: {
-        animeId, platformId, link, accessType, nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString(),
+        animeId, platformId, link, accessType,
         ...(lastEpisodeAiredAt && { lastEpisodeAiredAt: dayjs(lastEpisodeAiredAt).toISOString() }),
+        ...(nextEpisodeAiringAt && { nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString() }),
         ...(intervalInDays && { intervalInDays }),
         ...(episodeAired && { episodeAired }),
         ...(isMainPlatform && { isMainPlatform }),
@@ -149,14 +150,14 @@ export const updateAnimePlatform = async (
 ) => {
   try {
     lastEpisodeAiredAt = lastEpisodeAiredAt === null ? null : dayjs(lastEpisodeAiredAt).toISOString()
+    nextEpisodeAiringAt = nextEpisodeAiringAt === null ? null : dayjs(nextEpisodeAiringAt).toISOString()
     if (isMainPlatform) {
       await setUpMainPlatform(animeId)
     }
     const animePlatform = await prisma.animePlatform.update({
       where: { platformId_animeId: { platformId, animeId } },
       data: {
-        link, accessType, nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString(),
-        lastEpisodeAiredAt, intervalInDays, episodeAired, isMainPlatform
+        link, accessType, lastEpisodeAiredAt, nextEpisodeAiringAt, intervalInDays, episodeAired, isMainPlatform
       }, 
       include: {
         anime: true, platform: true
@@ -180,6 +181,7 @@ export const createOrUpdateAnimePlatform = async (
 ) => {
   try {
     lastEpisodeAiredAt = lastEpisodeAiredAt ? dayjs(lastEpisodeAiredAt).toISOString() : lastEpisodeAiredAt
+    nextEpisodeAiringAt = nextEpisodeAiringAt ? dayjs(nextEpisodeAiringAt).toISOString() : nextEpisodeAiringAt
     if (isMainPlatform) {
       await setUpMainPlatform(animeId)
     }
@@ -193,8 +195,8 @@ export const createOrUpdateAnimePlatform = async (
         data: {
           ...(link && { link }),
           ...(accessType && { accessType }),
-          ...(nextEpisodeAiringAt && { nextEpisodeAiringAt: dayjs(nextEpisodeAiringAt).toISOString() }),
           ...((lastEpisodeAiredAt || lastEpisodeAiredAt === null) && { lastEpisodeAiredAt }),
+          ...((nextEpisodeAiringAt || nextEpisodeAiringAt === null) && { nextEpisodeAiringAt }),
           ...(intervalInDays && { intervalInDays }),
           ...((episodeAired || episodeAired === 0) && { episodeAired }),
           ...((isMainPlatform || isMainPlatform === false) && { isMainPlatform }),

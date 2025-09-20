@@ -31,7 +31,7 @@ export const createAnimePlatform = validate(
   z.object({
     link: link, 
     accessType: oneAccessType, 
-    nextEpisodeAiringAt: dateTime,
+    nextEpisodeAiringAt: dateTime.nullable().optional(),
     lastEpisodeAiredAt: dateTime.nullable().optional(), 
     intervalInDays: idB.optional(), 
     episodeAired: num_watched_episodes.optional(), 
@@ -43,7 +43,7 @@ export const updateAnimePlatform = validate(
   z.object({
     link: link, 
     accessType: oneAccessType, 
-    nextEpisodeAiringAt: dateTime, 
+    nextEpisodeAiringAt: dateTime.nullable(), 
     lastEpisodeAiredAt: dateTime.nullable(), 
     intervalInDays: idB, 
     episodeAired: num_watched_episodes, 
@@ -55,7 +55,7 @@ export const createOrUpdateAnimePlatform = validate(
   z.object({
     link: link.optional(), 
     accessType: oneAccessType.optional(), 
-    nextEpisodeAiringAt: dateTime.optional(), 
+    nextEpisodeAiringAt: dateTime.nullable().optional(), 
     lastEpisodeAiredAt: dateTime.nullable().optional(), 
     intervalInDays: idB.optional(), 
     episodeAired: num_watched_episodes.optional(), 

@@ -102,7 +102,6 @@ model Anime {
 
   platforms      AnimePlatform[]
   animeList      AnimeList[]
-  animeSchedules AnimeSchedule[]
 
   @@map("anime")
 }
@@ -114,7 +113,7 @@ model AnimePlatform {
 
   link                String     @unique
   accessType          AccessType @map("access_type")
-  nextEpisodeAiringAt DateTime   @map("next_episode_airing_at")
+  nextEpisodeAiringAt DateTime?  @map("next_episode_airing_at")
   lastEpisodeAiredAt  DateTime?  @map("last_episode_aired_at")
   intervalInDays      Int        @default(7) @map("interval_in_days")
   episodeAired        Int        @default(0) @map("episode_aired")
@@ -136,18 +135,4 @@ model Platform {
   animePlatform AnimePlatform[]
 
   @@map("platforms")
-}
-
-model AnimeSchedule {
-  id      Int @id @default(autoincrement())
-  animeId Int @map("anime_id")
-
-  status    AnimeStatus
-  updateOn  DateTime    @map("update_on")
-  isUpdated Boolean     @default(false) @map("is_updated")
-
-  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
-
-  @@unique([animeId, status])
-  @@map("anime_schedules")
 }
