@@ -16,9 +16,15 @@ dayjs.extend(timezone);
 //   - If today is in January and n is in December, assign n to the previous year.
 function parseDate(dateStr, time) {
   const [hour, minute] = time.split(':');
-  const [date, month] = dateStr.split('/')
+  const [date, month] = dateStr.split('/');
   const today = dayjs();
-  let dateTime = dayjs(`${today.year()}-${month}-${date}T${hour}:${minute}:00`);  
+
+  // Parse langsung dengan Asia/Jakarta
+  let dateTime = dayjs.tz(
+    `${today.year()}-${month}-${date} ${hour}:${minute}`,
+    'YYYY-MM-DD HH:mm',
+    'Asia/Jakarta'
+  );
 
   if (Math.abs(dateTime.diff(today, 'month')) > 1) {
     if ((today.month() === 11) && (dateTime.month() === 0)) {
@@ -30,6 +36,7 @@ function parseDate(dateStr, time) {
   
   return dateTime;
 }
+
 
 export async function getTimeline(timeZone='Asia/Jakarta') {
   try {
@@ -146,4 +153,4 @@ export async function getInformation(url) {
   }
 }
 
-// console.log((await getTimeline()).length);
+console.log((await getTimeline()));
