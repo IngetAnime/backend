@@ -76,7 +76,9 @@ export const platformScheduler = () => {
 }
 
 export const bstationTimelineScheduler = async (timeZone='Asia/Jakarta') => {
-  cron.schedule('0 0 * * *', async () => {
+  cron.schedule('* * * * *', async () => {
+    console.log(`Start bstation timeline scraping at: ${dayjs().toISOString()}`);
+    
     const BSTATION_ID = 1;
     const TODAY = dayjs();
     const NEXT_WEEK = dayjs().tz(timeZone).add(7, 'day').startOf('day');
@@ -162,8 +164,10 @@ export const bstationTimelineScheduler = async (timeZone='Asia/Jakarta') => {
         });
       }
     }
-
-    await sendBstationScheduleReport(process.env.MAILER_USER, updatedPlatforms);
+    
+    console.log(updatedPlatforms);
+    console.log(`End bstation timeline scraping at: ${dayjs().toISOString()}`);
+    // await sendBstationScheduleReport(process.env.MAILER_USER, updatedPlatforms);
   }, {
     timezone: timeZone
   })

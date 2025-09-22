@@ -2,32 +2,31 @@ import nodemailer from "nodemailer";
 import path from "path";
 import ejs from "ejs";
 import { getToken } from "./jwt.js";
+import formData from "form-data";
+import Mailgun from "mailgun.js";
 
 const mailPath = "src/api/v1/views/mail";
 
-export const sendEmail = (to, subject, html) => {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.MAILER_USER,
-      pass: process.env.MAILER_PASSWORD,
-    },
+export const sendEmail = async (to, subject, html) => {
+  const mailgun = new Mailgun(formData);
+  const mg = mailgun.client({
+    username: "api",
+    key: process.env.MAILGUN_API_KEY
   });
-  transporter.sendMail(
-    {
-      from: process.env.MAILER_USER,
+
+  try {
+    const data = await mg.messages.create(process.env.MAILGUN_DOMAIN, {
+      from: `${process.env.APP_NAME} <postmaster@${process.env.MAILGUN_DOMAIN}>`,
       to,
       subject,
-      html,
-    },
-    (error, info) => {
-      if (error) {
-        throw error;
-      } else {
-        return info;
-      }
-    }
-  );
+      html
+    })
+
+    return data;
+  } catch(err) {
+    console.log(err);
+    throw err;
+  }
 }
 
 export const sendEmailVerification = async (email, otp) => {
