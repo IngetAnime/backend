@@ -14,17 +14,11 @@ dayjs.extend(timezone);
 // If the difference from today is more than one month, then perform further checks:
 //   - If today is in December and n is in January, assign n to the next year.
 //   - If today is in January and n is in December, assign n to the previous year.
-function parseDate(dateStr, time) {
+function parseDate(dateStr, time, timeZone) {
   const [hour, minute] = time.split(':');
   const [date, month] = dateStr.split('/');
   const today = dayjs();
-
-  // Parse langsung dengan Asia/Jakarta
-  let dateTime = dayjs.tz(
-    `${today.year()}-${month}-${date} ${hour}:${minute}`,
-    'YYYY-MM-DD HH:mm',
-    'Asia/Jakarta'
-  );
+  let dateTime = dayjs.tz(`${today.year()}-${month}-${date} ${hour}:${minute}:00`, timeZone);
 
   if (Math.abs(dateTime.diff(today, 'month')) > 1) {
     if ((today.month() === 11) && (dateTime.month() === 0)) {
@@ -36,7 +30,6 @@ function parseDate(dateStr, time) {
   
   return dateTime;
 }
-
 
 export async function getTimeline(timeZone='Asia/Jakarta') {
   try {
@@ -86,7 +79,7 @@ export async function getTimeline(timeZone='Asia/Jakarta') {
       const episodeNumber = match ? parseInt(match[0], 10) : null;
       const date = (item.date === 'Hari ini') ? dayjs().format('DD/MM') : item.date;
       
-      const releaseAt = parseDate(date, item.time).tz(timeZone);
+      const releaseAt = parseDate(date, item.time, timeZone).toISOString();
       return { 
         ...item, episodeNumber, releaseAt
       };
