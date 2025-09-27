@@ -18,7 +18,7 @@ const server = createServer(app);
 // CRON Jobs
 platformScheduler();
 // bstationTimelineScheduler();
-testingBstationTimeline();
+// testingBstationTimeline();
 
 // Setting-up cors origin
 const allowedOrigins = [
