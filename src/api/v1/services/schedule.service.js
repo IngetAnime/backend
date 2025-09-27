@@ -172,3 +172,21 @@ export const bstationTimelineScheduler = async (timeZone='Asia/Jakarta') => {
     timezone: timeZone
   })
 }
+
+function isTimeZoneSupported(tz) {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+export const testingBstationTimeline = (timeZone='Asia/Jakarta') => {
+  cron.schedule('* * * * *', async () => {
+    const data = await getBstationTimeline();
+    console.log(data);
+    console.log('Timezonenya adalah: ', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log('Support Asia/Jakarta kah? ', isTimeZoneSupported("Asia/Jakarta"));
+  })
+}
